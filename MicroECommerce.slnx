@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/BuildingBlocks.Core/BuildingBlocks.Core.csproj" Id="33f6e09c-416c-4e23-bbe4-1da32de5e7dc" />
+    <Project Path="src/BuildingBlocks/BuildingBlocks.CrossCutting/BuildingBlocks.CrossCutting.csproj" Id="0e46f020-7c14-4fe5-90df-5ab73824b676" />
+    <Project Path="src/BuildingBlocks/BuildingBlocks.Infrastructure/BuildingBlocks.Infrastructure.csproj" Id="2654c2d6-01ee-4d30-9be0-5cdd8ce01563" />
+    <Project Path="src/BuildingBlocks/BuildingBlocks.Logging/BuildingBlocks.Logging.csproj" Id="b1cbac0e-ab25-41e9-8cfc-dfd84001e97e" />
+    <Project Path="src/BuildingBlocks/BuildingBlocks.Security/BuildingBlocks.Security.csproj" Id="94be6f9d-7e63-4138-9b9f-ed4fee009d23" />
+  </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Catalog/">
+    <Project Path="src/Services/Catalog/Catalog.API/Catalog.API.csproj" Id="09856c6a-421b-4d53-aa9c-97bfef2e204f" />
+    <Project Path="src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" Id="abddb19d-c405-4fca-ab88-8ebc805f9921" />
+    <Project Path="src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" Id="b2c8e75a-7d93-4cbd-bbb6-005b1405771f" />
+    <Project Path="src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" Id="4f5d2ae5-a0b4-4c08-9b87-441f4bb80882" />
+  </Folder>
+</Solution>
