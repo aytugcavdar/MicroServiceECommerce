@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Catalog.Domain.Entities;
 
-public class Category:Entity<Guid>, IAggregateRoot
+public class Category : Entity<Guid>, IAggregateRoot
 {
     public string Name { get; set; }
     public ICollection<Product> Products { get; set; }

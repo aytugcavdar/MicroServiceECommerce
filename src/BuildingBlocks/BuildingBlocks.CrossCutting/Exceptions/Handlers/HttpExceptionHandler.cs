@@ -21,31 +21,31 @@ public class HttpExceptionHandler
     {
         Response.ContentType = "application/json";
 
-        // Hatanın tipine göre işlem yap
         return exception switch
         {
             BusinessException businessException => HandleException(businessException),
-            _ => HandleException(exception) // Tanımadığımız diğer tüm hatalar
+            BusinessValidationException validationException => HandleException(validationException),
+            _ => HandleException(exception)
         };
     }
 
     private Task HandleException(BusinessException businessException)
     {
-        // HTTP 400 yap
         Response.StatusCode = StatusCodes.Status400BadRequest;
-
-        // JSON formatını hazırla
         var details = new BusinessProblemDetails(businessException.Message);
+        return Response.WriteAsJsonAsync(details);
+    }
 
-        // JSON olarak yaz
+    private Task HandleException(BusinessValidationException validationException)
+    {
+        Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        var details = new ValidationProblemDetails(validationException.Errors);
         return Response.WriteAsJsonAsync(details);
     }
 
     private Task HandleException(Exception exception)
     {
-        // HTTP 500 yap
         Response.StatusCode = StatusCodes.Status500InternalServerError;
-
         var details = new InternalServerErrorProblemDetails(exception.Message);
         return Response.WriteAsJsonAsync(details);
     }

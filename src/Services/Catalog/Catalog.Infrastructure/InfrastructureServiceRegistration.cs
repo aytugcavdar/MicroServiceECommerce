@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Core.Repositories;
+using Catalog.Application.Services;
 using Catalog.Domain.Entities;
 using Catalog.Infrastructure.Contexts;
 using Catalog.Infrastructure.Repositories;
@@ -18,8 +19,8 @@ public static class InfrastructureServiceRegistration
         services.AddDbContext<CatalogDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("CatalogConnectionString")));
 
-        services.AddScoped<IAsyncRepository<Product, Guid>, ProductRepository>();
-
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
         return services;
     }
 }

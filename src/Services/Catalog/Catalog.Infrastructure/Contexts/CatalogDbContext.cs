@@ -1,4 +1,5 @@
-﻿using Catalog.Domain.Entities;
+﻿using BuildingBlocks.Core.Domain;
+using Catalog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -27,7 +28,7 @@ public class CatalogDbContext:DbContext
             p.Property(p=>p.Id).HasColumnName("Id");
             p.Property(p=>p.Name).HasColumnName("Name").IsRequired().HasMaxLength(100);
             p.Property(p=>p.Description).HasColumnName("Description").IsRequired().HasMaxLength(500);
-            p.Property(p=>p.Price).HasColumnName("decimal(18,2)").IsRequired();
+            p.Property(p => p.Price).HasColumnName("Price").HasColumnType("decimal(18,2)").IsRequired();
 
             p.HasOne(p => p.Category)
             .WithMany(c => c.Products)
@@ -48,6 +49,31 @@ public class CatalogDbContext:DbContext
                     Name = "Electronics"
                 }
             );
+            modelBuilder.Entity<Product>()
+                .HasQueryFilter(p => p.DeletedDate == null);
         });
+
+    }
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var domainEntities = ChangeTracker.Entries<Entity<Guid>>()
+            .Where(x => x.Entity.DomainEvents.Any())
+            .ToList();
+
+        var domainEvents = domainEntities
+            .SelectMany(x => x.Entity.DomainEvents)
+            .ToList();
+
+        domainEntities.ForEach(entity => entity.Entity.ClearDomainEvents());
+
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        // Eventleri publish et (MediatR ile)
+        foreach (var domainEvent in domainEvents)
+        {
+            // await _mediator.Publish(domainEvent, cancellationToken);
+        }
+
+        return result;
     }
 }

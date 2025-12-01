@@ -25,7 +25,7 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
 
     public async Task<TEntity> AddAsync(TEntity entity)
     {
-        entity.CreatedDate = DateTime.Now;
+        entity.CreatedDate = DateTime.UtcNow;
         await _dbContext.AddAsync(entity);
         await _dbContext.SaveChangesAsync();
         return entity;
@@ -49,7 +49,7 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
             await _dbContext.SaveChangesAsync();
             return entity;
         }
-        entity.DeletedDate = DateTime.Now;
+        entity.DeletedDate = DateTime.UtcNow;
         _dbContext.Update(entity);
         await _dbContext.SaveChangesAsync();
         return entity;

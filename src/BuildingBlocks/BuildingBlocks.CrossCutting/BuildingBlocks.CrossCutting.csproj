@@ -8,11 +8,14 @@
 
   <ItemGroup>
     <Folder Include="Middlewares\" />
-    <Folder Include="Validation\" />
 	
   </ItemGroup>
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="FluentValidation" Version="11.11.0" />
+		<PackageReference Include="MediatR" Version="13.1.0" />
 	</ItemGroup>
 
 </Project>

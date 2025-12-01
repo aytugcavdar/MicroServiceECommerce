@@ -8,9 +8,10 @@ using System.Text;
 
 namespace Catalog.Infrastructure.Repositories;
 
-public class ProductRepository: EfRepositoryBase<Product, Guid, CatalogDbContext>, IProductRepository
+public class CategoryRepository: EfRepositoryBase<Category, Guid, CatalogDbContext>, ICategoryRepository
 {
-    public ProductRepository(CatalogDbContext dbContext) : base(dbContext)
+    public CategoryRepository(CatalogDbContext dbContext) : base(dbContext)
     {
+        
     }
 }

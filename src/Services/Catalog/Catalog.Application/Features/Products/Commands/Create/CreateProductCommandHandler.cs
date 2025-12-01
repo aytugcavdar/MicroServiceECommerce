@@ -7,9 +7,8 @@ using System.Text;
 
 namespace Catalog.Application.Features.Products.Commands.Create;
 
-public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Guid>
+public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, CreateProductCommandResponse>
 {
-    // ARTIK GENERIC DEĞİL, SENİN INTERFACE'İN
     private readonly IProductRepository _productRepository;
 
     public CreateProductCommandHandler(IProductRepository productRepository)
@@ -17,7 +16,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         _productRepository = productRepository;
     }
 
-    public async Task<Guid> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    public async Task<CreateProductCommandResponse> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
         Product product = new Product(
             request.Name,
@@ -28,9 +27,14 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             request.CategoryId
         );
 
-        // Yine aynı metodları kullanabilirsin çünkü IProductRepository, IAsyncRepository'den miras aldı.
         await _productRepository.AddAsync(product);
 
-        return product.Id;
+        return new CreateProductCommandResponse(
+            product.Id,
+            product.Name,
+            product.Price,
+            product.Stock,
+            product.CreatedDate
+        );
     }
 }
