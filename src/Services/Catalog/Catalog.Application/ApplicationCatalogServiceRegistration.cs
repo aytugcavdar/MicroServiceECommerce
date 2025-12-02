@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Catalog.Application;
 
-public static class ApplicationServiceRegistration
+public static class ApplicationCatalogServiceRegistration
 {
     public static IServiceCollection AddCatalogApplicationServices(this IServiceCollection services)
     {

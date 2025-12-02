@@ -14,4 +14,10 @@
     <Project Path="src/Services/Catalog/Catalog.Domain/Catalog.Domain.csproj" Id="b2c8e75a-7d93-4cbd-bbb6-005b1405771f" />
     <Project Path="src/Services/Catalog/Catalog.Infrastructure/Catalog.Infrastructure.csproj" Id="4f5d2ae5-a0b4-4c08-9b87-441f4bb80882" />
   </Folder>
+  <Folder Name="/src/Services/Identity/">
+    <Project Path="src/Services/Identity/Identity.API/Identity.API.csproj" Id="bb16ca27-d4ff-4362-a2e6-83a2249e6a18" />
+    <Project Path="src/Services/Identity/Identity.Application/Identity.Application.csproj" Id="37ff45dc-e6f1-4761-8b03-a95504d692aa" />
+    <Project Path="src/Services/Identity/Identity.Domain/Identity.Domain.csproj" Id="10bdd726-f3f6-4a96-8f67-dbe861e7786e" />
+    <Project Path="src/Services/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="12772a0d-dcf3-4e88-9f43-e7cd87ff3550" />
+  </Folder>
 </Solution>
