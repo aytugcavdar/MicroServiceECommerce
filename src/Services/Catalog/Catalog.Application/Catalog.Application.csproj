@@ -22,8 +22,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Categories\Queries\" />
-    <Folder Include="Features\Categories\Profiles\" />
     <Folder Include="Features\Products\Commands\Delete\" />
     <Folder Include="Features\Products\Commands\Update\" />
   </ItemGroup>

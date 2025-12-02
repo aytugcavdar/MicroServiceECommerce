@@ -1,5 +1,7 @@
-﻿using BuildingBlocks.Core.Responses;
+﻿using BuildingBlocks.Core.Requests;
+using BuildingBlocks.Core.Responses;
 using Catalog.Application.Features.Categories.Commands;
+using Catalog.Application.Features.Categories.Queries;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers;
 
@@ -21,5 +23,12 @@ public class CategoryController : BaseController
         );
 
         return CreatedAtAction(nameof(Create), new { id = result.Id }, response);
+    }
+    [HttpGet]
+    public async Task <IActionResult> GetList([FromQuery] PageRequest pageRequest)
+    {
+        GetListCategoryQuery query = new() {PageRequest = pageRequest};
+        var result = await Mediator.Send(query);
+        return Ok(result);
     }
 }
