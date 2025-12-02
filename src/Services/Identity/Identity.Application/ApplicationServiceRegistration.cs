@@ -7,7 +7,7 @@ using FluentValidation;
 using BuildingBlocks.CrossCutting.Validation;
 namespace Identity.Application;
 
-public static class ApplicationIdentityServiceRegistration
+public static class ApplicationServiceRegistration
 {
     public static IServiceCollection AddIdentityApplicationServices(this IServiceCollection services)
     {
