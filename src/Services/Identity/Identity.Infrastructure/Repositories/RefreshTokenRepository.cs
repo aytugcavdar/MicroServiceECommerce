@@ -2,6 +2,7 @@
 using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Contexts;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Infrastructure.Repositories;
 
@@ -11,18 +12,36 @@ public class RefreshTokenRepository : EfRepositoryBase<RefreshToken, Guid, Ident
     {
     }
 
-    public Task DeleteExpiredTokensAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<RefreshToken?> GetByTokenAsync(
+        string token,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _dbContext.RefreshTokens
+            .Include(rt => rt.User)
+            .FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
     }
 
-    public Task<List<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<List<RefreshToken>> GetActiveTokensByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _dbContext.RefreshTokens
+            .Where(rt => rt.UserId == userId &&
+                         rt.RevokedAt == null &&
+                         rt.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync(cancellationToken);
     }
 
-    public Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
+    public async Task DeleteExpiredTokensAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var expiredTokens = await _dbContext.RefreshTokens
+            .Where(rt => rt.UserId == userId &&
+                         (rt.RevokedAt != null || rt.ExpiresAt <= DateTime.UtcNow))
+            .ToListAsync(cancellationToken);
+
+        _dbContext.RefreshTokens.RemoveRange(expiredTokens);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

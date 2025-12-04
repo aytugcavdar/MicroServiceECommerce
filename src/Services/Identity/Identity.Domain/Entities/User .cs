@@ -9,21 +9,21 @@ public class User : Entity<Guid>, IAggregateRoot
 {
     public string FirstName { get; set; }
     public string LastName { get; set; }
-    public string UserName { get; set; } // IdentityUser'da vardı, manuel ekledik
-    public string Email { get; set; }    // IdentityUser'da vardı, manuel ekledik
+    public string UserName { get; set; }
+    public string Email { get; set; }
 
-    // Şifreleme için (IdentityUser bunu kendi içinde yapar ama biz manuel yapıyoruz)
-    public byte[] PasswordSalt { get; set; }
-    public byte[] PasswordHash { get; set; }
+    // BCrypt için tek bir hash string yeterli
+    public string PasswordHash { get; set; }
+
+    // BACKWARD COMPATIBILITY: Eski sistemdeki kullanıcılar için
+    // Migration sonrası bu alanlar null olabilir
+    public byte[]? PasswordSalt { get; set; }
+    public byte[]? PasswordHashLegacy { get; set; }
 
     public bool Status { get; set; }
     public bool IsEmailConfirmed { get; set; }
     public string? EmailConfirmationToken { get; set; }
 
-    // --- REFRESH TOKEN MANTIK DEĞİŞİKLİĞİ ---
-    // Senin kodunda RefreshToken tek bir stringdi.
-    // Doğrusu: Bir kullanıcının hem telefondan hem bilgisayardan girmesi için
-    // RefreshToken'ın bir LİSTE olması gerekir.
     public ICollection<RefreshToken> RefreshTokens { get; set; }
     public ICollection<UserOperationClaim> UserOperationClaims { get; set; }
 
@@ -31,11 +31,41 @@ public class User : Entity<Guid>, IAggregateRoot
     {
         FirstName = string.Empty;
         LastName = string.Empty;
+        UserName = string.Empty;
+        Email = string.Empty;
+        PasswordHash = string.Empty;
         RefreshTokens = new HashSet<RefreshToken>();
         UserOperationClaims = new HashSet<UserOperationClaim>();
     }
 
-    public User(string firstName, string lastName, string email, string userName, byte[] passwordSalt, byte[] passwordHash, bool status) : this()
+    public User(
+        string firstName,
+        string lastName,
+        string email,
+        string userName,
+        string passwordHash,
+        bool status) : this()
+    {
+        Id = Guid.NewGuid();
+        FirstName = firstName;
+        LastName = lastName;
+        Email = email;
+        UserName = userName;
+        PasswordHash = passwordHash;
+        Status = status;
+        CreatedDate = DateTime.UtcNow;
+    }
+
+    // BACKWARD COMPATIBILITY Constructor
+    [Obsolete("Use constructor with passwordHash string instead")]
+    public User(
+        string firstName,
+        string lastName,
+        string email,
+        string userName,
+        byte[] passwordSalt,
+        byte[] passwordHashLegacy,
+        bool status) : this()
     {
         Id = Guid.NewGuid();
         FirstName = firstName;
@@ -43,7 +73,7 @@ public class User : Entity<Guid>, IAggregateRoot
         Email = email;
         UserName = userName;
         PasswordSalt = passwordSalt;
-        PasswordHash = passwordHash;
+        PasswordHashLegacy = passwordHashLegacy;
         Status = status;
         CreatedDate = DateTime.UtcNow;
     }
