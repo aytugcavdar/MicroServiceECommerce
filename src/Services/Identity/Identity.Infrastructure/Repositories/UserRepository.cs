@@ -2,6 +2,7 @@
 using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Contexts;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,18 +15,36 @@ public class UserRepository : EfRepositoryBase<User, Guid, IdentityDbContext>, I
     {
     }
 
-    public Task<List<RefreshToken>> GetActiveRefreshTokensAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<List<RefreshToken>> GetActiveRefreshTokensAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _dbContext.RefreshTokens
+            .Where(rt => rt.UserId == userId &&
+                         rt.RevokedAt == null &&
+                         rt.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync(cancellationToken);
     }
 
-    public Task<User?> GetByEmailWithRolesAsync(string email, CancellationToken cancellationToken = default)
+    public async Task<User?> GetByEmailWithRolesAsync(
+        string email,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Users
+            .Include(u => u.UserOperationClaims)
+                .ThenInclude(uoc => uoc.OperationClaim)
+            .Include(u => u.RefreshTokens)
+            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
 
-    public Task<User?> GetByUserNameWithRolesAsync(string userName, CancellationToken cancellationToken = default)
+    public async Task<User?> GetByUserNameWithRolesAsync(
+        string userName,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return await _dbContext.Users
+            .Include(u => u.UserOperationClaims)
+                .ThenInclude(uoc => uoc.OperationClaim)
+            .Include(u => u.RefreshTokens)
+            .FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
     }
 }
