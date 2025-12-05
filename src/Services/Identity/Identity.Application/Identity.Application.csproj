@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks.Core\BuildingBlocks.Core.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks.CrossCutting\BuildingBlocks.CrossCutting.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\BuildingBlocks.Security\BuildingBlocks.Security.csproj" />
     <ProjectReference Include="..\Identity.Domain\Identity.Domain.csproj" />
   </ItemGroup>
 	<ItemGroup>
@@ -18,8 +19,5 @@
 	    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
 		<PackageReference Include="MediatR" Version="13.1.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="Features\Auth\EventHandlers\" />
 	</ItemGroup>
 </Project>

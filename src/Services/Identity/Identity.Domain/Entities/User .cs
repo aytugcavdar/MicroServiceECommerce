@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Core.Domain;
+using Identity.Domain.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,19 +12,13 @@ public class User : Entity<Guid>, IAggregateRoot
     public string LastName { get; set; }
     public string UserName { get; set; }
     public string Email { get; set; }
-
-    // BCrypt için tek bir hash string yeterli
-    public string PasswordHash { get; set; }
-
-    // BACKWARD COMPATIBILITY: Eski sistemdeki kullanıcılar için
-    // Migration sonrası bu alanlar null olabilir
-    public byte[]? PasswordSalt { get; set; }
-    public byte[]? PasswordHashLegacy { get; set; }
-
+    public byte[] PasswordSalt { get; set; }
+    public byte[] PasswordHash { get; set; }
     public bool Status { get; set; }
     public bool IsEmailConfirmed { get; set; }
     public string? EmailConfirmationToken { get; set; }
 
+    // Navigation properties
     public ICollection<RefreshToken> RefreshTokens { get; set; }
     public ICollection<UserOperationClaim> UserOperationClaims { get; set; }
 
@@ -33,7 +28,8 @@ public class User : Entity<Guid>, IAggregateRoot
         LastName = string.Empty;
         UserName = string.Empty;
         Email = string.Empty;
-        PasswordHash = string.Empty;
+        PasswordSalt = Array.Empty<byte>();
+        PasswordHash = Array.Empty<byte>();
         RefreshTokens = new HashSet<RefreshToken>();
         UserOperationClaims = new HashSet<UserOperationClaim>();
     }
@@ -43,28 +39,8 @@ public class User : Entity<Guid>, IAggregateRoot
         string lastName,
         string email,
         string userName,
-        string passwordHash,
-        bool status) : this()
-    {
-        Id = Guid.NewGuid();
-        FirstName = firstName;
-        LastName = lastName;
-        Email = email;
-        UserName = userName;
-        PasswordHash = passwordHash;
-        Status = status;
-        CreatedDate = DateTime.UtcNow;
-    }
-
-    // BACKWARD COMPATIBILITY Constructor
-    [Obsolete("Use constructor with passwordHash string instead")]
-    public User(
-        string firstName,
-        string lastName,
-        string email,
-        string userName,
         byte[] passwordSalt,
-        byte[] passwordHashLegacy,
+        byte[] passwordHash,
         bool status) : this()
     {
         Id = Guid.NewGuid();
@@ -73,8 +49,58 @@ public class User : Entity<Guid>, IAggregateRoot
         Email = email;
         UserName = userName;
         PasswordSalt = passwordSalt;
-        PasswordHashLegacy = passwordHashLegacy;
+        PasswordHash = passwordHash;
         Status = status;
         CreatedDate = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Factory method: Yeni kullanıcı oluştur ve domain event fırlat
+    /// </summary>
+    public static User Create(
+        string firstName,
+        string lastName,
+        string email,
+        string userName,
+        byte[] passwordSalt,
+        byte[] passwordHash,
+        bool status = true)
+    {
+        var user = new User(firstName, lastName, email, userName, passwordSalt, passwordHash, status);
+
+        // Email confirmation token oluştur
+        user.EmailConfirmationToken = Guid.NewGuid().ToString();
+        user.IsEmailConfirmed = false;
+
+        // Domain Event fırlat
+        user.AddDomainEvent(new UserCreatedDomainEvent(
+            userId: user.Id,
+            email: user.Email,
+            firstName: user.FirstName,
+            lastName: user.LastName,
+            userName: user.UserName,
+            emailConfirmationToken: user.EmailConfirmationToken
+        ));
+
+        return user;
+    }
+
+    /// <summary>
+    /// Email'i doğrula ve domain event fırlat
+    /// </summary>
+    public void ConfirmEmail()
+    {
+        if (IsEmailConfirmed)
+            throw new InvalidOperationException("Email is already confirmed");
+
+        IsEmailConfirmed = true;
+        EmailConfirmationToken = null;
+        UpdatedDate = DateTime.UtcNow;
+
+        // Domain Event fırlat
+        AddDomainEvent(new UserEmailConfirmedDomainEvent(
+            userId: Id,
+            email: Email
+        ));
     }
 }

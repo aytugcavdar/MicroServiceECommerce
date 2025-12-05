@@ -6,21 +6,25 @@ namespace BuildingBlocks.Security.Encryption;
 
 public static class HashingHelper
 {
-    /// <summary>
-    /// BCrypt kullanarak şifre hash'i oluşturur
-    /// workFactor: 12 (varsayılan, güvenlik seviyesi)
-    /// </summary>
-    public static string HashPassword(string password, int workFactor = 12)
+
+    public static void CreatePasswordHash(
+        string password,
+        out byte[] passwordHash,
+        out byte[] passwordSalt)
     {
-        return BCrypt.Net.BCrypt.HashPassword(password, workFactor);
+        using var hmac = new HMACSHA512();
+        passwordSalt = hmac.Key;
+        passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
     }
 
-    /// <summary>
-    /// BCrypt kullanarak şifre doğrulama yapar
-    /// </summary>
-    public static bool VerifyPassword(string password, string hash)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, hash);
-    }
 
+    public static bool VerifyPasswordHash(
+        string password,
+        byte[] passwordHash,
+        byte[] passwordSalt)
+    {
+        using var hmac = new HMACSHA512(passwordSalt);
+        byte[] computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+        return computedHash.SequenceEqual(passwordHash);
+    }
 }

@@ -1,6 +1,10 @@
 version: '3.8'
 
 services:
+  # ============================================
+  # DATABASES
+  # ============================================
+  
   # PostgreSQL - Catalog Database
   catalog-db:
     image: postgres:16-alpine
@@ -16,6 +20,11 @@ services:
     networks:
       - microecommerce-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # PostgreSQL - Identity Database
   identity-db:
@@ -32,8 +41,17 @@ services:
     networks:
       - microecommerce-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # SEQ - Log Görüntüleme
+  # ============================================
+  # LOGGING & MONITORING
+  # ============================================
+  
+  # SEQ - Log Görüntüleme Aracı
   seq:
     image: datalust/seq:latest
     container_name: seq
@@ -47,6 +65,26 @@ services:
       - microecommerce-network
     restart: unless-stopped
 
+  # ============================================
+  # MESSAGE BROKER (Future)
+  # ============================================
+  
+  # RabbitMQ - Message Broker (Şimdilik yorum satırında)
+  # rabbitmq:
+  #   image: rabbitmq:3-management-alpine
+  #   container_name: rabbitmq
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: admin
+  #     RABBITMQ_DEFAULT_PASS: admin123
+  #   ports:
+  #     - "5672:5672"   # AMQP port
+  #     - "15672:15672" # Management UI
+  #   volumes:
+  #     - rabbitmq-data:/var/lib/rabbitmq
+  #   networks:
+  #     - microecommerce-network
+  #   restart: unless-stopped
+
 networks:
   microecommerce-network:
     driver: bridge
@@ -55,3 +93,4 @@ volumes:
   catalog-db-data:
   identity-db-data:
   seq-data:
+  # rabbitmq-data:

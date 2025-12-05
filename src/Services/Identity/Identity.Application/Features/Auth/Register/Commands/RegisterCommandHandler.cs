@@ -1,5 +1,11 @@
-﻿using Identity.Domain.Entities;
+﻿using BuildingBlocks.Core.Security.Constants;
+using BuildingBlocks.CrossCutting.Exceptions.types;
+using BuildingBlocks.Security.Encryption;
+using Identity.Application.Features.Auth.Register.Rules;
+using Identity.Application.Services;
+using Identity.Domain.Entities;
 using MediatR;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,64 +15,83 @@ namespace Identity.Application.Features.Auth.Register.Commands;
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterCommandResponse>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IOperationClaimRepository _operationClaimRepository;
+    private readonly AuthBusinessRules _authBusinessRules;
+    private readonly Serilog.ILogger _logger;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
-        IOperationClaimRepository operationClaimRepository)
+        AuthBusinessRules authBusinessRules)
     {
         _userRepository = userRepository;
-        _operationClaimRepository = operationClaimRepository;
+        _authBusinessRules = authBusinessRules;
+        _logger = Log.ForContext<RegisterCommandHandler>();
     }
 
     public async Task<RegisterCommandResponse> Handle(
         RegisterCommand request,
         CancellationToken cancellationToken)
     {
-        // Email kontrolü
-        var existingUser = await _userRepository.GetAsync(
-            u => u.Email == request.Email,
-            cancellationToken: cancellationToken);
+        _logger.Information(
+            "📝 Registration attempt for email: {Email}",
+            request.Email);
 
-        if (existingUser != null)
-            throw new BusinessException("Email already exists");
+        // ============================================
+        // 1. BUSINESS RULES VALIDATION
+        // ============================================
+        await _authBusinessRules.EmailShouldNotExistWhenRegistering(
+            request.Email,
+            cancellationToken);
 
-        // Username kontrolü
-        existingUser = await _userRepository.GetAsync(
-            u => u.UserName == request.UserName,
-            cancellationToken: cancellationToken);
+        await _authBusinessRules.UserNameShouldNotExistWhenRegistering(
+            request.UserName,
+            cancellationToken);
 
-        if (existingUser != null)
-            throw new BusinessException("Username already exists");
+        var defaultRole = await _authBusinessRules.DefaultUserRoleShouldExist(
+            GeneralOperationClaims.User,
+            cancellationToken);
 
-        // Password hash
+        // ============================================
+        // 2. PASSWORD HASHING
+        // ============================================
         HashingHelper.CreatePasswordHash(
             request.Password,
             out byte[] passwordHash,
             out byte[] passwordSalt);
 
-        // User oluştur
-        User user = new(
+        // ============================================
+        // 3. CREATE USER (Domain Logic)
+        // ============================================
+        User user = User.Create(
             firstName: request.FirstName,
             lastName: request.LastName,
             email: request.Email,
             userName: request.UserName,
             passwordSalt: passwordSalt,
-            passwordHash: passwordHash,
-            status: true);
+            passwordHash: passwordHash);
 
-        // Default "User" rolünü ekle
-        var userClaim = await _operationClaimRepository.GetAsync(
-            c => c.Name == "User",
-            cancellationToken: cancellationToken);
+        // ============================================
+        // 4. ASSIGN DEFAULT ROLE
+        // ============================================
+        user.UserOperationClaims.Add(
+            new UserOperationClaim(user.Id, defaultRole.Id));
 
-        if (userClaim != null)
-        {
-            user.UserOperationClaims.Add(new UserOperationClaim(user.Id, userClaim.Id));
-        }
+        _logger.Debug(
+            "👤 Default role assigned: {RoleName}",
+            GeneralOperationClaims.User);
 
+        // ============================================
+        // 5. SAVE TO DATABASE
+        // ============================================
         await _userRepository.AddAsync(user);
 
+        _logger.Information(
+            "✅ User registered successfully: {UserId} - {Email}",
+            user.Id,
+            user.Email);
+
+        // ============================================
+        // 6. RETURN RESPONSE
+        // ============================================
         return new RegisterCommandResponse
         {
             UserId = user.Id,

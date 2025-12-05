@@ -1,6 +1,8 @@
 ﻿using BuildingBlocks.CrossCutting.Exceptions.types;
+using Identity.Application.Features.Auth.Register.Rules;
 using Identity.Application.Services;
 using MediatR;
+using Serilog;
 
 namespace Identity.Application.Features.Auth.ConfirmEmail.Commands;
 
@@ -8,44 +10,56 @@ public class ConfirmEmailCommandHandler
     : IRequestHandler<ConfirmEmailCommand, ConfirmEmailCommandResponse>
 {
     private readonly IUserRepository _userRepository;
+    private readonly AuthBusinessRules _authBusinessRules;
+    private readonly Serilog.ILogger _logger;
 
-    public ConfirmEmailCommandHandler(IUserRepository userRepository)
+    public ConfirmEmailCommandHandler(
+        IUserRepository userRepository,
+        AuthBusinessRules authBusinessRules)
     {
         _userRepository = userRepository;
+        _authBusinessRules = authBusinessRules;
+        _logger = Log.ForContext<ConfirmEmailCommandHandler>();
     }
 
     public async Task<ConfirmEmailCommandResponse> Handle(
         ConfirmEmailCommand request,
         CancellationToken cancellationToken)
     {
-        // Kullanıcıyı bul
-        var user = await _userRepository.GetAsync(
-            u => u.Email == request.Email,
-            cancellationToken: cancellationToken);
+        _logger.Information(
+            "📧 Email confirmation attempt for: {Email}",
+            request.Email);
 
-        if (user == null)
-            throw new BusinessException("User not found");
+        // ============================================
+        // 1. BUSINESS RULES VALIDATION
+        // ============================================
+        var user = await _authBusinessRules.UserShouldExistWhenSelected(
+            request.Email,
+            cancellationToken);
 
-        // Zaten doğrulanmış mı?
-        if (user.IsEmailConfirmed)
-            throw new BusinessException("Email already confirmed");
+        _authBusinessRules.EmailShouldNotBeAlreadyConfirmed(user);
 
-        // Token doğru mu?
-        if (user.EmailConfirmationToken != request.Token)
-            throw new BusinessException("Invalid confirmation token");
+        _authBusinessRules.EmailConfirmationTokenShouldBeValid(
+            user,
+            request.Token);
 
-        // Token süresi dolmuş mu? (Eğer expiration eklediyseniz)
-        // if (user.EmailConfirmationTokenExpiration.HasValue && 
-        //     user.EmailConfirmationTokenExpiration < DateTime.UtcNow)
-        //     throw new BusinessException("Confirmation token has expired. Please request a new one.");
+        // ============================================
+        // 2. CONFIRM EMAIL (Domain Logic)
+        // ============================================
+        user.ConfirmEmail();  // Parametresiz çağır (token kontrolü zaten yapıldı)
 
-        // Email'i onayla
-        user.IsEmailConfirmed = true;
-        user.EmailConfirmationToken = null;
-        // user.EmailConfirmationTokenExpiration = null;
-
+        // ============================================
+        // 3. SAVE TO DATABASE
+        // ============================================
         await _userRepository.UpdateAsync(user);
 
+        _logger.Information(
+            "✅ Email confirmed successfully: {Email}",
+            user.Email);
+
+        // ============================================
+        // 4. RETURN RESPONSE
+        // ============================================
         return new ConfirmEmailCommandResponse
         {
             Success = true,
