@@ -1,29 +1,47 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BuildingBlocks.CrossCutting.Validation;
+using FluentValidation;
+using Identity.Application.Features.Auth.Register.Rules;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Reflection;
-using FluentValidation;
-using BuildingBlocks.CrossCutting.Validation;
+using System.Text;
 namespace Identity.Application;
 
 public static class ApplicationServiceRegistration
 {
     public static IServiceCollection AddIdentityApplicationServices(this IServiceCollection services)
     {
-        // "Executing Assembly" demek, bu kodun çalıştığı yer (yani Application katmanı) demektir.
         var assembly = Assembly.GetExecutingAssembly();
-        // 1. AutoMapper'ı bu katmanda bulduğu bütün Profile dosyalarına göre ayarlar
+
+        // ============================================
+        // 1. AUTOMAPPER
+        // ============================================
         services.AddAutoMapper(assembly);
-        // 2. FluentValidation - Tüm Validator'ları otomatik olarak bul ve ekle
+
+        // ============================================
+        // 2. FLUENTVALIDATION
+        // ============================================
         services.AddValidatorsFromAssembly(assembly);
-        // 3. MediatR'ı bu katmanda bulduğu bütün Command/Query Handler'lara göre ayarlar
+
+        // ============================================
+        // 3. MEDIATR
+        // ============================================
         services.AddMediatR(configuration =>
         {
             configuration.RegisterServicesFromAssembly(assembly);
-
             configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
+
+        // ============================================
+        // 4. BUSINESS RULES
+        // ============================================
+        // Scoped olarak kaydet (her request'te yeni instance)
+        services.AddScoped<AuthBusinessRules>();
+
+        // Gelecekte başka business rules'lar eklenebilir:
+        // services.AddScoped<ProductBusinessRules>();
+        // services.AddScoped<OrderBusinessRules>();
 
         return services;
     }

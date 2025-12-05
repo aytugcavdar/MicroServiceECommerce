@@ -1,12 +1,14 @@
 ﻿using BuildingBlocks.Core.Domain;
+using BuildingBlocks.Core.Outbox;
 using Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Text.Json;
 
 namespace Identity.Infrastructure.Contexts;
+
+
+
 
 public class IdentityDbContext : DbContext
 {
@@ -16,6 +18,9 @@ public class IdentityDbContext : DbContext
     public DbSet<OperationClaim> OperationClaims { get; set; }
     public DbSet<UserOperationClaim> UserOperationClaims { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+    // Outbox Pattern için
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
 
     public IdentityDbContext(
         DbContextOptions<IdentityDbContext> options,
@@ -56,7 +61,7 @@ public class IdentityDbContext : DbContext
             oc.HasIndex(p => p.Name).IsUnique();
         });
 
-        // UserOperationClaim Configuration (Many-to-Many)
+        // UserOperationClaim Configuration
         modelBuilder.Entity<UserOperationClaim>(uoc =>
         {
             uoc.ToTable("UserOperationClaims").HasKey(k => k.Id);
@@ -71,7 +76,6 @@ public class IdentityDbContext : DbContext
                .HasForeignKey(p => p.OperationClaimId)
                .OnDelete(DeleteBehavior.Cascade);
 
-            // Bir kullanıcı aynı rolü birden fazla kez alamaz
             uoc.HasIndex(p => new { p.UserId, p.OperationClaimId }).IsUnique();
         });
 
@@ -91,13 +95,36 @@ public class IdentityDbContext : DbContext
             rt.HasIndex(p => p.Token);
         });
 
+        // OutboxMessage Configuration
+        modelBuilder.Entity<OutboxMessage>(om =>
+        {
+            om.ToTable("OutboxMessages").HasKey(k => k.Id);
+            om.Property(p => p.Type).HasColumnName("Type").IsRequired().HasMaxLength(500);
+            om.Property(p => p.Content).HasColumnName("Content").IsRequired();
+            om.Property(p => p.OccurredOn).HasColumnName("OccurredOn").IsRequired();
+            om.Property(p => p.ProcessedOn).HasColumnName("ProcessedOn");
+            om.Property(p => p.Error).HasColumnName("Error").HasMaxLength(1000);
+            om.Property(p => p.RetryCount).HasColumnName("RetryCount").IsRequired();
+
+            // Index'ler (Performans için)
+            om.HasIndex(p => new { p.ProcessedOn, p.OccurredOn });
+            om.HasIndex(p => p.RetryCount);
+        });
+
         base.OnModelCreating(modelBuilder);
     }
 
+    /// <summary>
+    /// SaveChanges override - Outbox Pattern implementasyonu
+    /// Domain Event'leri OutboxMessages tablosuna kaydeder
+    /// </summary>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Domain Events varsa publish et
-        var domainEntities = ChangeTracker.Entries<Entity<Guid>>()
+        // ============================================
+        // 1. DOMAIN EVENT'LERİ TOPLA
+        // ============================================
+        var domainEntities = ChangeTracker
+            .Entries<Entity<Guid>>()
             .Where(x => x.Entity.DomainEvents.Any())
             .ToList();
 
@@ -105,16 +132,35 @@ public class IdentityDbContext : DbContext
             .SelectMany(x => x.Entity.DomainEvents)
             .ToList();
 
-        domainEntities.ForEach(entity => entity.Entity.ClearDomainEvents());
+        // ============================================
+        // 2. DOMAIN EVENT'LERİ ENTİTY'DEN TEMİZLE
+        // ============================================
+        foreach (var entry in domainEntities)
+        {
+            entry.Entity.ClearDomainEvents();
+        }
 
-        var result = await base.SaveChangesAsync(cancellationToken);
+        // ============================================
+        // 3. DOMAIN EVENT'LERİ OUTBOX'A KAYDET
+        // ============================================
+        foreach (var domainEvent in domainEvents)
+        {
+            var eventType = domainEvent.GetType();
+            var eventJson = JsonSerializer.Serialize(domainEvent, eventType);
 
-        // TODO: Domain events publish et (MediatR ile)
-        // foreach (var domainEvent in domainEvents)
-        // {
-        //     await _mediator.Publish(domainEvent, cancellationToken);
-        // }
+            var outboxMessage = new OutboxMessage(
+                type: eventType.AssemblyQualifiedName ?? eventType.FullName ?? eventType.Name,
+                content: eventJson
+            );
 
-        return result;
+            await OutboxMessages.AddAsync(outboxMessage, cancellationToken);
+        }
+
+        // ============================================
+        // 4. HER ŞEYİ BİRLİKTE KAYDET (TRANSACTION)
+        // ============================================
+        // Users + OutboxMessages aynı transaction içinde
+        // Ya ikisi de başarılı, ya ikisi de iptal
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }
