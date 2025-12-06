@@ -16,7 +16,10 @@ public class User : Entity<Guid>, IAggregateRoot
     public byte[] PasswordHash { get; set; }
     public bool Status { get; set; }
     public bool IsEmailConfirmed { get; set; }
+    public string RegistrationIp { get; set; } = string.Empty;
     public string? EmailConfirmationToken { get; set; }
+
+
 
     // Navigation properties
     public ICollection<RefreshToken> RefreshTokens { get; set; }
@@ -32,6 +35,7 @@ public class User : Entity<Guid>, IAggregateRoot
         PasswordHash = Array.Empty<byte>();
         RefreshTokens = new HashSet<RefreshToken>();
         UserOperationClaims = new HashSet<UserOperationClaim>();
+        RegistrationIp = string.Empty;
     }
 
     public User(
@@ -41,7 +45,8 @@ public class User : Entity<Guid>, IAggregateRoot
         string userName,
         byte[] passwordSalt,
         byte[] passwordHash,
-        bool status) : this()
+        bool status,
+        string registrationIp) : this()
     {
         Id = Guid.NewGuid();
         FirstName = firstName;
@@ -51,6 +56,7 @@ public class User : Entity<Guid>, IAggregateRoot
         PasswordSalt = passwordSalt;
         PasswordHash = passwordHash;
         Status = status;
+        RegistrationIp = registrationIp;
         CreatedDate = DateTime.UtcNow;
     }
 
@@ -64,9 +70,10 @@ public class User : Entity<Guid>, IAggregateRoot
         string userName,
         byte[] passwordSalt,
         byte[] passwordHash,
+        string registrationIp,
         bool status = true)
     {
-        var user = new User(firstName, lastName, email, userName, passwordSalt, passwordHash, status);
+        var user = new User(firstName, lastName, email, userName, passwordSalt, passwordHash, status,registrationIp);
 
         // Email confirmation token oluştur
         user.EmailConfirmationToken = Guid.NewGuid().ToString();

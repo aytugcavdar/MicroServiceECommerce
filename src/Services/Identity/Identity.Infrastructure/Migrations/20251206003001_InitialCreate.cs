@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Identity.Infrastructure.Migrations
 {
     /// <inheritdoc />
@@ -59,6 +61,7 @@ namespace Identity.Infrastructure.Migrations
                     PasswordHash = table.Column<byte[]>(type: "bytea", nullable: false),
                     Status = table.Column<bool>(type: "boolean", nullable: false),
                     IsEmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
+                    RegistrationIp = table.Column<string>(type: "text", nullable: false),
                     EmailConfirmationToken = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -123,6 +126,15 @@ namespace Identity.Infrastructure.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "OperationClaims",
+                columns: new[] { "Id", "CreatedDate", "DeletedDate", "Name", "UpdatedDate" },
+                values: new object[,]
+                {
+                    { new Guid("387f61c5-e5ce-4952-9650-379685655635"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Admin", null },
+                    { new Guid("96d29946-f94e-46c5-ab78-36109312130e"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "User", null }
                 });
 
             migrationBuilder.CreateIndex(

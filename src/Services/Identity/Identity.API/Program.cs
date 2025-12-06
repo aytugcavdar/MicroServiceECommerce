@@ -8,7 +8,7 @@ using Identity.Infrastructure.Contexts;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.AddSerilogLogging("MicroECommerce.Identity");
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddControllers();
@@ -20,10 +20,10 @@ builder.Services.AddIdentityApplicationServices();
 builder.Services.AddIdentityInfrastructureServices(builder.Configuration);
 
 
-builder.Services.AddHostedService<OutboxProcessor<IdentityDbContext>>();
+//builder.Services.AddHostedService<OutboxProcessor<IdentityDbContext>>();
 
 // OutboxCleanupService: Her gün çalýþýr, eski mesajlarý temizler
-builder.Services.AddHostedService<OutboxCleanupService<IdentityDbContext>>();
+//builder.Services.AddHostedService<OutboxCleanupService<IdentityDbContext>>();
 
 var app = builder.Build();
 
