@@ -1,5 +1,6 @@
 ﻿using BuildingBlocks.Core.Domain;
 using BuildingBlocks.Core.Outbox;
+using BuildingBlocks.Core.Security.Constants;
 using Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,7 +46,7 @@ public class IdentityDbContext : DbContext
             u.Property(p => p.Status).HasColumnName("Status").IsRequired();
             u.Property(p => p.IsEmailConfirmed).HasColumnName("IsEmailConfirmed").IsRequired();
             u.Property(p => p.EmailConfirmationToken).HasColumnName("EmailConfirmationToken").HasMaxLength(255);
-
+            u.Property(p => p.RegistrationIp).HasColumnName("RegistrationIp").IsRequired();
             u.HasIndex(p => p.Email).IsUnique();
             u.HasIndex(p => p.UserName).IsUnique();
 
@@ -59,6 +60,20 @@ public class IdentityDbContext : DbContext
             oc.ToTable("OperationClaims").HasKey(k => k.Id);
             oc.Property(p => p.Name).HasColumnName("Name").IsRequired().HasMaxLength(50);
             oc.HasIndex(p => p.Name).IsUnique();
+            oc.HasData(
+            new OperationClaim
+            {
+                Id = Guid.Parse("387f61c5-e5ce-4952-9650-379685655635"), 
+                Name = GeneralOperationClaims.Admin,
+                CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new OperationClaim
+            {
+                Id = Guid.Parse("96d29946-f94e-46c5-ab78-36109312130e"), 
+                Name = GeneralOperationClaims.User,
+                CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            }
+        );
         });
 
         // UserOperationClaim Configuration

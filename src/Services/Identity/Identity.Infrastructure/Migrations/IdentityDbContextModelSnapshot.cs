@@ -101,6 +101,20 @@ namespace Identity.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("OperationClaims", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("387f61c5-e5ce-4952-9650-379685655635"),
+                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = new Guid("96d29946-f94e-46c5-ab78-36109312130e"),
+                            CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "User"
+                        });
                 });
 
             modelBuilder.Entity("Identity.Domain.Entities.RefreshToken", b =>
@@ -207,6 +221,11 @@ namespace Identity.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("bytea")
                         .HasColumnName("PasswordSalt");
+
+                    b.Property<string>("RegistrationIp")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("RegistrationIp");
 
                     b.Property<bool>("Status")
                         .HasColumnType("boolean")

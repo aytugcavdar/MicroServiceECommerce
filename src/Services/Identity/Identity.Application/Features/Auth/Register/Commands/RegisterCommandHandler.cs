@@ -67,7 +67,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
             email: request.Email,
             userName: request.UserName,
             passwordSalt: passwordSalt,
-            passwordHash: passwordHash);
+            passwordHash: passwordHash,
+            registrationIp: request.IpAddress);
 
         // ============================================
         // 4. ASSIGN DEFAULT ROLE
