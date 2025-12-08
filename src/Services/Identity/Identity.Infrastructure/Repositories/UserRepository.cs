@@ -31,6 +31,7 @@ public class UserRepository : EfRepositoryBase<User, Guid, IdentityDbContext>, I
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Users
+            .AsSplitQuery()
             .Include(u => u.UserOperationClaims)
                 .ThenInclude(uoc => uoc.OperationClaim)
             .Include(u => u.RefreshTokens)
@@ -42,6 +43,7 @@ public class UserRepository : EfRepositoryBase<User, Guid, IdentityDbContext>, I
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Users
+            .AsSplitQuery()
             .Include(u => u.UserOperationClaims)
                 .ThenInclude(uoc => uoc.OperationClaim)
             .Include(u => u.RefreshTokens)

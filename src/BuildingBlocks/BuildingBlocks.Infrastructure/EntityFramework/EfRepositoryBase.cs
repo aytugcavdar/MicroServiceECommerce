@@ -61,7 +61,7 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
         if (!enableTracking)
             queryable = queryable.AsNoTracking();
         if (!withDeleted)
-            queryable = queryable.AsNoTracking();
+            queryable = queryable.Where(e => e.DeletedDate == null);
         return await queryable.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
