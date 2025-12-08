@@ -15,15 +15,15 @@ namespace Identity.Application.Features.Auth.Register.Commands;
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterCommandResponse>
 {
     private readonly IUserRepository _userRepository;
-    private readonly AuthBusinessRules _authBusinessRules;
+    private readonly RegisterBusinessRules _registerBusinessRules;
     private readonly Serilog.ILogger _logger;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
-        AuthBusinessRules authBusinessRules)
+        RegisterBusinessRules authBusinessRules)
     {
         _userRepository = userRepository;
-        _authBusinessRules = authBusinessRules;
+        _registerBusinessRules = authBusinessRules;
         _logger = Log.ForContext<RegisterCommandHandler>();
     }
 
@@ -38,17 +38,14 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
         // ============================================
         // 1. BUSINESS RULES VALIDATION
         // ============================================
-        await _authBusinessRules.EmailShouldNotExistWhenRegistering(
-            request.Email,
-            cancellationToken);
+        await _registerBusinessRules.EmailShouldNotExistWhenRegistering(
+            request.Email);
 
-        await _authBusinessRules.UserNameShouldNotExistWhenRegistering(
-            request.UserName,
-            cancellationToken);
+        await _registerBusinessRules.UserNameShouldNotExistWhenRegistering(
+            request.UserName);
 
-        var defaultRole = await _authBusinessRules.DefaultUserRoleShouldExist(
-            GeneralOperationClaims.User,
-            cancellationToken);
+        var defaultRole = await _registerBusinessRules.DefaultUserRoleShouldExist(
+            GeneralOperationClaims.User);
 
         // ============================================
         // 2. PASSWORD HASHING

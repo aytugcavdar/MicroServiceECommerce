@@ -1,4 +1,4 @@
-using BuildingBlocks.CrossCutting.Exceptions.Extensions;
+ï»¿using BuildingBlocks.CrossCutting.Exceptions.Extensions;
 using BuildingBlocks.Infrastructure.Outbox;
 using BuildingBlocks.Logging.Extensions;
 using Identity.Application;
@@ -22,7 +22,7 @@ builder.Services.AddIdentityInfrastructureServices(builder.Configuration);
 
 //builder.Services.AddHostedService<OutboxProcessor<IdentityDbContext>>();
 
-// OutboxCleanupService: Her gün çalýþýr, eski mesajlarý temizler
+// OutboxCleanupService: Her gÃ¼n Ã§alÄ±ÅŸÄ±r, eski mesajlarÄ± temizler
 //builder.Services.AddHostedService<OutboxCleanupService<IdentityDbContext>>();
 
 var app = builder.Build();
@@ -46,4 +46,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+Serilog.Log.Information("ðŸš€ Identity.API is starting...");
 app.Run();
+Serilog.Log.Information("âœ… Identity.API stopped");

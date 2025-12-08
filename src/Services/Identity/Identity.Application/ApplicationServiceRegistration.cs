@@ -1,6 +1,10 @@
 ﻿using BuildingBlocks.CrossCutting.Validation;
+using BuildingBlocks.Security.JWT;
 using FluentValidation;
+using Identity.Application.Features.Auth.ConfirmEmail.Rules;
+using Identity.Application.Features.Auth.Login.Rules;
 using Identity.Application.Features.Auth.Register.Rules;
+using Identity.Application.Features.Users.Rules;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -37,11 +41,13 @@ public static class ApplicationServiceRegistration
         // 4. BUSINESS RULES
         // ============================================
         // Scoped olarak kaydet (her request'te yeni instance)
-        services.AddScoped<AuthBusinessRules>();
+        services.AddScoped<RegisterBusinessRules>();
+        services.AddScoped<ConfirmEmailBusinessRules>();
+        services.AddScoped<UserBusinessRules>();
+        services.AddScoped<LoginBusinessRules>();
+        services.AddScoped<ITokenHelper, JwtHelper>();
 
-        // Gelecekte başka business rules'lar eklenebilir:
-        // services.AddScoped<ProductBusinessRules>();
-        // services.AddScoped<OrderBusinessRules>();
+
 
         return services;
     }

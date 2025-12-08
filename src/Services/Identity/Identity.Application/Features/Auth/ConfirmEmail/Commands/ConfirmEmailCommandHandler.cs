@@ -1,5 +1,6 @@
 ﻿using BuildingBlocks.CrossCutting.Exceptions.types;
-using Identity.Application.Features.Auth.Register.Rules;
+using Identity.Application.Features.Auth.ConfirmEmail.Rules;
+using Identity.Application.Features.Users.Rules;
 using Identity.Application.Services;
 using MediatR;
 using Serilog;
@@ -10,15 +11,18 @@ public class ConfirmEmailCommandHandler
     : IRequestHandler<ConfirmEmailCommand, ConfirmEmailCommandResponse>
 {
     private readonly IUserRepository _userRepository;
-    private readonly AuthBusinessRules _authBusinessRules;
+    private readonly ConfirmEmailBusinessRules _confirmEmailBusinessRules;
+    private readonly UserBusinessRules _userBusinessRules; 
     private readonly Serilog.ILogger _logger;
 
     public ConfirmEmailCommandHandler(
         IUserRepository userRepository,
-        AuthBusinessRules authBusinessRules)
+        ConfirmEmailBusinessRules confirmEmailBusinessRules,
+        UserBusinessRules userBusinessRules) 
     {
         _userRepository = userRepository;
-        _authBusinessRules = authBusinessRules;
+        _confirmEmailBusinessRules = confirmEmailBusinessRules;
+        _userBusinessRules = userBusinessRules;
         _logger = Log.ForContext<ConfirmEmailCommandHandler>();
     }
 
@@ -31,22 +35,21 @@ public class ConfirmEmailCommandHandler
             request.Email);
 
         // ============================================
-        // 1. BUSINESS RULES VALIDATION
+        // 1. BUSINESS RULES VALIDATION & RETRIEVAL
         // ============================================
-        var user = await _authBusinessRules.UserShouldExistWhenSelected(
-            request.Email,
-            cancellationToken);
 
-        _authBusinessRules.EmailShouldNotBeAlreadyConfirmed(user);
+        var user = await _userBusinessRules.UserShouldExist(request.Email);
 
-        _authBusinessRules.EmailConfirmationTokenShouldBeValid(
+        _confirmEmailBusinessRules.EmailShouldNotBeAlreadyConfirmed(user);
+
+        _confirmEmailBusinessRules.EmailConfirmationTokenShouldBeValid(
             user,
             request.Token);
 
         // ============================================
         // 2. CONFIRM EMAIL (Domain Logic)
         // ============================================
-        user.ConfirmEmail();  // Parametresiz çağır (token kontrolü zaten yapıldı)
+        user.ConfirmEmail();
 
         // ============================================
         // 3. SAVE TO DATABASE
