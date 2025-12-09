@@ -41,7 +41,9 @@ public static class ApplicationServiceRegistration
         // 4. BUSINESS RULES
         // ============================================
         // Scoped olarak kaydet (her request'te yeni instance)
-        services.AddScoped<AuthBusinessRules>();
+        services.AddScoped<RegisterBusinessRules>();
+        services.AddScoped<LoginBusinessRules>();
+        services.AddScoped<ConfirmEmailBusinessRules>();
 
 
         return services;

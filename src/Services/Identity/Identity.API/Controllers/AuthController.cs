@@ -25,8 +25,6 @@ public class AuthController : BaseController
         return CreatedAtAction(nameof(Register), new { id = result.UserId }, response);
     }
     [HttpPost("login")]
-    [ProducesResponseType(typeof(ApiResponse<LoginCommandResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
         command.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;

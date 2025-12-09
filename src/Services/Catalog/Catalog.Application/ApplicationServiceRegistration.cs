@@ -1,4 +1,6 @@
 ﻿using BuildingBlocks.CrossCutting.Validation;
+using Catalog.Application.Features.Categories.Rules;
+using Catalog.Application.Features.Products.Rules;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -29,6 +31,9 @@ public static class ApplicationServiceRegistration
 
             configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
+
+        services.AddScoped<CategoryBusinessRules>();
+        services.AddScoped<ProductBusinessRules>();
 
         return services;
     }

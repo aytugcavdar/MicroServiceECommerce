@@ -55,13 +55,15 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
         return entity;
     }
 
-    public async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, bool withDeleted = false, bool enableTracking = true, CancellationToken cancellationToken = default)
+    public async Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> predicate, Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null, bool withDeleted = false, bool enableTracking = true, CancellationToken cancellationToken = default)
     {
         var queryable = Query();
         if (!enableTracking)
             queryable = queryable.AsNoTracking();
         if (!withDeleted)
             queryable = queryable.Where(e => e.DeletedDate == null);
+        if (include != null) 
+            queryable = include(queryable);
         return await queryable.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 

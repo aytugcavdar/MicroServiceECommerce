@@ -1,6 +1,9 @@
-﻿using BuildingBlocks.CrossCutting.Exceptions.Extensions;
+﻿using BuildingBlocks.CrossCutting.Authentication;
+using BuildingBlocks.CrossCutting.Exceptions.Extensions;
 using BuildingBlocks.Infrastructure.Outbox;
 using BuildingBlocks.Logging.Extensions;
+using BuildingBlocks.Messaging;
+using BuildingBlocks.Security;
 using Identity.Application;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Contexts;
@@ -25,6 +28,16 @@ builder.Services.AddIdentityInfrastructureServices(builder.Configuration);
 // OutboxCleanupService: Her gün çalışır, eski mesajları temizler
 //builder.Services.AddHostedService<OutboxCleanupService<IdentityDbContext>>();
 
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddSecurityServices(options =>
+{
+    options.SkipJwtRegistration = true;
+    options.EnableEmailAuthentication = true;
+    options.EnableOtpAuthentication = false; 
+    options.EnableTwoFactorAuthentication = false; 
+});
+builder.Services.AddEmailServices(builder.Configuration);
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
@@ -41,6 +54,7 @@ if (app.Environment.IsDevelopment())
 app.ConfigureCustomExceptionMiddleware();
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 
 app.UseAuthorization();
 
