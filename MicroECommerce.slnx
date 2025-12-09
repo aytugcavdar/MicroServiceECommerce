@@ -5,6 +5,7 @@
     <Project Path="src/BuildingBlocks/BuildingBlocks.CrossCutting/BuildingBlocks.CrossCutting.csproj" Id="0e46f020-7c14-4fe5-90df-5ab73824b676" />
     <Project Path="src/BuildingBlocks/BuildingBlocks.Infrastructure/BuildingBlocks.Infrastructure.csproj" Id="2654c2d6-01ee-4d30-9be0-5cdd8ce01563" />
     <Project Path="src/BuildingBlocks/BuildingBlocks.Logging/BuildingBlocks.Logging.csproj" Id="b1cbac0e-ab25-41e9-8cfc-dfd84001e97e" />
+    <Project Path="src/BuildingBlocks/BuildingBlocks.Messaging/BuildingBlocks.Messaging.csproj" Id="76065622-9ed5-4234-84bc-a277d1842356" />
     <Project Path="src/BuildingBlocks/BuildingBlocks.Security/BuildingBlocks.Security.csproj" Id="94be6f9d-7e63-4138-9b9f-ed4fee009d23" />
   </Folder>
   <Folder Name="/src/Services/" />

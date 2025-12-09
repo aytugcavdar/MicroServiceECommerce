@@ -13,6 +13,7 @@ public interface IAsyncRepository<TEntity, TId> : IQuery<TEntity>
 {
     Task<TEntity?> GetAsync(
         Expression<Func<TEntity, bool>> predicate,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>>? include = null,
         bool withDeleted = false,
         bool enableTracking = true,
         CancellationToken cancellationToken = default);
