@@ -44,6 +44,7 @@ public static class ApplicationServiceRegistration
         services.AddScoped<RegisterBusinessRules>();
         services.AddScoped<LoginBusinessRules>();
         services.AddScoped<ConfirmEmailBusinessRules>();
+        services.AddScoped<UserBusinessRules>();
 
 
         return services;

@@ -129,40 +129,5 @@ public static class AuthenticationExtensions
 
         return services;
     }
-    public static IServiceCollection AddSwaggerWithJwt(this IServiceCollection services)
-    {
-        services.AddSwaggerGen(options =>
-        {
-            // JWT Security Definition
-            options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                Description = @"JWT Authorization header using the Bearer scheme. 
-                      Enter 'Bearer' [space] and then your token in the text input below.
-                      Example: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'"
-            });
-
-            // Security Requirement
-            options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-            {
-                {
-                    new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                    {
-                        Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                        {
-                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
-        });
-
-        return services;
-    }
+   
 }

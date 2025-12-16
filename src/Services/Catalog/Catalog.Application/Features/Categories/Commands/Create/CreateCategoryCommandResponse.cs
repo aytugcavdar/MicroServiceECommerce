@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Catalog.Application.Features.Categories.Commands;
+namespace Catalog.Application.Features.Categories.Commands.Create;
 
 public class CreateCategoryCommandResponse
 {

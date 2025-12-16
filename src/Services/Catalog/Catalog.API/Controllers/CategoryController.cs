@@ -1,6 +1,8 @@
 ﻿using BuildingBlocks.Core.Requests;
 using BuildingBlocks.Core.Responses;
-using Catalog.Application.Features.Categories.Commands;
+using Catalog.Application.Features.Categories.Commands.Create;
+using Catalog.Application.Features.Categories.Commands.Delete;
+using Catalog.Application.Features.Categories.Commands.Uptade;
 using Catalog.Application.Features.Categories.Queries;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers;
@@ -30,5 +32,21 @@ public class CategoryController : BaseController
         GetListCategoryQuery query = new() {PageRequest = pageRequest};
         var result = await Mediator.Send(query);
         return Ok(result);
+    }
+    [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<DeleteCategoryCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Delete([FromRoute] Guid id)
+    {
+        var command = new DeleteCategoryCommand(id);
+        var result = await Mediator.Send(command);
+        return Ok(ApiResponse<DeleteCategoryCommandResponse>.SuccessResult(result));
+    }
+
+    [HttpPut]
+    [ProducesResponseType(typeof(ApiResponse<UpdateCategoryCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update([FromBody] UpdateCategoryCommand command)
+    {
+        var result = await Mediator.Send(command);
+        return Ok(ApiResponse<UpdateCategoryCommandResponse>.SuccessResult(result));
     }
 }

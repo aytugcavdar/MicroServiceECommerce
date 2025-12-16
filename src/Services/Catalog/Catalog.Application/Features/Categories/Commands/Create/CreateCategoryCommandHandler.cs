@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Catalog.Application.Features.Categories.Commands;
+namespace Catalog.Application.Features.Categories.Commands.Create;
 
 public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryCommand, CreateCategoryCommandResponse>
 {
