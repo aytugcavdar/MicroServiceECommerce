@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/ApiGateway/">
+    <Project Path="src/ApiGateway/ApiGateway/ApiGateway.csproj" Id="e93cd10e-6054-40ca-94d1-595ba4abc880" />
+  </Folder>
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/BuildingBlocks.Core/BuildingBlocks.Core.csproj" Id="33f6e09c-416c-4e23-bbe4-1da32de5e7dc" />
     <Project Path="src/BuildingBlocks/BuildingBlocks.CrossCutting/BuildingBlocks.CrossCutting.csproj" Id="0e46f020-7c14-4fe5-90df-5ab73824b676" />

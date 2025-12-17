@@ -5,7 +5,6 @@ services:
   # DATABASES
   # ============================================
   
-  # PostgreSQL - Catalog Database
   catalog-db:
     image: postgres:16-alpine
     container_name: catalog-db
@@ -26,7 +25,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # PostgreSQL - Identity Database
   identity-db:
     image: postgres:16-alpine
     container_name: identity-db
@@ -51,7 +49,6 @@ services:
   # LOGGING & MONITORING
   # ============================================
   
-  # SEQ - Log Görüntüleme Aracı
   seq:
     image: datalust/seq:latest
     container_name: seq
@@ -66,24 +63,105 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # MESSAGE BROKER (Future)
+  # MESSAGE BROKER
   # ============================================
   
-  # RabbitMQ - Message Broker (Şimdilik yorum satırında)
-  # rabbitmq:
-  #   image: rabbitmq:3-management-alpine
-  #   container_name: rabbitmq
-  #   environment:
-  #     RABBITMQ_DEFAULT_USER: admin
-  #     RABBITMQ_DEFAULT_PASS: admin123
-  #   ports:
-  #     - "5672:5672"   # AMQP port
-  #     - "15672:15672" # Management UI
-  #   volumes:
-  #     - rabbitmq-data:/var/lib/rabbitmq
-  #   networks:
-  #     - microecommerce-network
-  #   restart: unless-stopped
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - microecommerce-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ============================================
+  # MICROSERVICES
+  # ============================================
+  
+  api-gateway:
+    build:
+      context: .
+      dockerfile: src/ApiGateway/Dockerfile
+    container_name: api-gateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ReverseProxy__Clusters__identity-cluster__Destinations__identity-destination-1__Address=http://identity-api:80
+      - ReverseProxy__Clusters__catalog-cluster__Destinations__catalog-destination-1__Address=http://catalog-api:80
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+      - TokenOptions__Audience=microecommerce.com
+      - TokenOptions__Issuer=microecommerce.com
+      - TokenOptions__SecurityKey=your-super-secret-key-minimum-32-characters-long-please-change-this
+    ports:
+      - "5000:80"
+    depends_on:
+      - catalog-api
+      - identity-api
+      - seq
+    networks:
+      - microecommerce-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  catalog-api:
+    build:
+      context: .
+      dockerfile: src/Services/Catalog/Catalog.API/Dockerfile
+    container_name: catalog-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__CatalogConnectionString=Host=catalog-db;Port=5432;Database=MicroECommerce_CatalogDb;Username=postgres;Password=admin123;
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+    ports:
+      - "5152:80"
+    depends_on:
+      catalog-db:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    networks:
+      - microecommerce-network
+    restart: unless-stopped
+
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/Services/Identity/Identity.API/Dockerfile
+    container_name: identity-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__IdentityConnectionString=Host=identity-db;Port=5432;Database=MicroECommerce_IdentityDb;Username=postgres;Password=admin123;
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
+    ports:
+      - "5201:80"
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      seq:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microecommerce-network
+    restart: unless-stopped
 
 networks:
   microecommerce-network:
@@ -93,4 +171,4 @@ volumes:
   catalog-db-data:
   identity-db-data:
   seq-data:
-  # rabbitmq-data:
+  rabbitmq-data:
