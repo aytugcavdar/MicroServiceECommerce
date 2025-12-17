@@ -3,6 +3,7 @@ using Identity.Application.Services;
 using Identity.Domain.Entities;
 using Identity.Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,23 +16,11 @@ public class UserRepository : EfRepositoryBase<User, Guid, IdentityDbContext>, I
     {
     }
 
-    public async Task<List<RefreshToken>> GetActiveRefreshTokensAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default)
-    {
-        return await _dbContext.RefreshTokens
-            .Where(rt => rt.UserId == userId &&
-                         rt.RevokedAt == null &&
-                         rt.ExpiresAt > DateTime.UtcNow)
-            .ToListAsync(cancellationToken);
-    }
-
     public async Task<User?> GetByEmailWithRolesAsync(
         string email,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Users
-            .AsSplitQuery()
             .Include(u => u.UserOperationClaims)
                 .ThenInclude(uoc => uoc.OperationClaim)
             .Include(u => u.RefreshTokens)
@@ -43,10 +32,20 @@ public class UserRepository : EfRepositoryBase<User, Guid, IdentityDbContext>, I
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Users
-            .AsSplitQuery()
             .Include(u => u.UserOperationClaims)
                 .ThenInclude(uoc => uoc.OperationClaim)
             .Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
+    }
+
+    public async Task<List<RefreshToken>> GetActiveRefreshTokensAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.RefreshTokens
+            .Where(rt => rt.UserId == userId &&
+                         rt.RevokedAt == null &&
+                         rt.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync(cancellationToken);
     }
 }
