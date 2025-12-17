@@ -102,7 +102,12 @@ public class OutboxProcessor<TDbContext> : BackgroundService
                 }
 
                 // JSON'ı event'e çevir
-                var domainEvent = JsonSerializer.Deserialize(message.Content, eventType);
+                _logger.LogInformation("RAW JSON CONTENT: {Content}", message.Content);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true 
+                };
+                var domainEvent = JsonSerializer.Deserialize(message.Content, eventType, options);
                 if (domainEvent == null)
                 {
                     message.MarkAsFailed("Failed to deserialize event");

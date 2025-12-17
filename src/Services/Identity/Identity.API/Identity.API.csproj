@@ -33,10 +33,5 @@
     <ProjectReference Include="..\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\Identity.Infrastructure\Identity.Infrastructure.csproj" />
   </ItemGroup>
-	<ItemGroup>
-		<None Update="EmailTemplates\**\*.html">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
 
 </Project>

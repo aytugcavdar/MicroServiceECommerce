@@ -4,6 +4,7 @@ using BuildingBlocks.Security.Encryption;
 using Identity.Application.Features.Auth.Register.Rules;
 using Identity.Application.Services;
 using Identity.Domain.Entities;
+using Identity.Domain.Events;
 using MediatR;
 using Serilog;
 using System;
@@ -16,7 +17,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
 {
     private readonly IUserRepository _userRepository;
     private readonly RegisterBusinessRules _registerBusinessRules;
-    private readonly Serilog.ILogger _logger;
+    private readonly ILogger _logger;
 
     public RegisterCommandHandler(
         IUserRepository userRepository,
@@ -24,6 +25,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
     {
         _userRepository = userRepository;
         _registerBusinessRules = authBusinessRules;
+        // Loglama için context belirtiyoruz, böylece loglarda hangi sınıftan geldiği belli olur.
         _logger = Log.ForContext<RegisterCommandHandler>();
     }
 
@@ -31,24 +33,18 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
         RegisterCommand request,
         CancellationToken cancellationToken)
     {
-        _logger.Information(
-            "📝 Registration attempt for email: {Email}",
-            request.Email);
+        _logger.Information("📝 Yeni üyelik talebi: {Email}", request.Email);
 
         // ============================================
-        // 1. BUSINESS RULES VALIDATION
+        // 1. İŞ KURALLARI (Validasyon)
         // ============================================
-        await _registerBusinessRules.EmailShouldNotExistWhenRegistering(
-            request.Email);
+        await _registerBusinessRules.EmailShouldNotExistWhenRegistering(request.Email);
+        await _registerBusinessRules.UserNameShouldNotExistWhenRegistering(request.UserName);
 
-        await _registerBusinessRules.UserNameShouldNotExistWhenRegistering(
-            request.UserName);
-
-        var defaultRole = await _registerBusinessRules.DefaultUserRoleShouldExist(
-            GeneralOperationClaims.User);
+        var defaultRole = await _registerBusinessRules.DefaultUserRoleShouldExist(GeneralOperationClaims.User);
 
         // ============================================
-        // 2. PASSWORD HASHING
+        // 2. ŞİFRE HASHLEME
         // ============================================
         HashingHelper.CreatePasswordHash(
             request.Password,
@@ -56,8 +52,10 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
             out byte[] passwordSalt);
 
         // ============================================
-        // 3. CREATE USER (Domain Logic)
+        // 3. KULLANICI OLUŞTURMA (Critical Point!)
         // ============================================
+        // NOT: User.Create metodu içinde "UserCreatedDomainEvent" oluşturulur.
+        // Bu event, mail gönderme emrini taşıyan gizli tetikleyicidir.
         User user = User.Create(
             firstName: request.FirstName,
             lastName: request.LastName,
@@ -68,33 +66,30 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
             registrationIp: request.IpAddress);
 
         // ============================================
-        // 4. ASSIGN DEFAULT ROLE
+        // 4. VARSAYILAN ROL ATAMA
         // ============================================
-        user.UserOperationClaims.Add(
-            new UserOperationClaim(user.Id, defaultRole.Id));
+        user.UserOperationClaims.Add(new UserOperationClaim(user.Id, defaultRole.Id));
 
-        _logger.Debug(
-            "👤 Default role assigned: {RoleName}",
-            GeneralOperationClaims.User);
+        _logger.Debug("👤 Kullanıcıya varsayılan rol atandı: {RoleName}", GeneralOperationClaims.User);
 
         // ============================================
-        // 5. SAVE TO DATABASE
+        // 5. VERİTABANINA KAYIT (Outbox Tetiklenir)
         // ============================================
+        // AddAsync çağrıldığında, User entity'si içindeki Domain Event de 
+        // "OutboxMessages" tablosuna kaydedilir. 
+        // Program.cs'deki işlemci bu mesajı okuyup maili o zaman gönderir.
         await _userRepository.AddAsync(user);
 
-        _logger.Information(
-            "✅ User registered successfully: {UserId} - {Email}",
-            user.Id,
-            user.Email);
+        _logger.Information("✅ Kullanıcı başarıyla oluşturuldu: {UserId}", user.Id);
 
         // ============================================
-        // 6. RETURN RESPONSE
+        // 6. CEVAP DÖNME
         // ============================================
         return new RegisterCommandResponse
         {
             UserId = user.Id,
             Email = user.Email,
-            Message = "Registration successful. Please check your email to confirm your account."
+            Message = "Kayıt başarılı. Lütfen hesabınızı doğrulamak için e-postanızı kontrol edin."
         };
     }
 }

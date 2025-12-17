@@ -23,10 +23,10 @@ builder.Services.AddIdentityApplicationServices();
 builder.Services.AddIdentityInfrastructureServices(builder.Configuration);
 
 
-//builder.Services.AddHostedService<OutboxProcessor<IdentityDbContext>>();
+builder.Services.AddHostedService<OutboxProcessor<IdentityDbContext>>();
 
-// OutboxCleanupService: Her gün çalışır, eski mesajları temizler
-//builder.Services.AddHostedService<OutboxCleanupService<IdentityDbContext>>();
+
+builder.Services.AddHostedService<OutboxCleanupService<IdentityDbContext>>();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSecurityServices(options =>

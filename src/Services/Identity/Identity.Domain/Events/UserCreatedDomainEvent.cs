@@ -8,13 +8,18 @@ namespace Identity.Domain.Events;
 
 public class UserCreatedDomainEvent : IDomainEvent
 {
-    public Guid UserId { get; }
-    public string Email { get; }
-    public string FirstName { get; }
-    public string LastName { get; }
-    public string UserName { get; }
-    public string? EmailConfirmationToken { get; }
-    public DateTime OccurredOn { get; }
+    public Guid UserId { get; private set; }
+    public string Email { get; private set; }
+    public string FirstName { get; private set; }
+    public string LastName { get; private set; }
+    public string UserName { get; private set; }
+    public string? EmailConfirmationToken { get; private set; }
+    public DateTime OccurredOn { get; private set; }
+
+    public UserCreatedDomainEvent()
+    {
+
+    }
 
     public UserCreatedDomainEvent(
         Guid userId,
@@ -32,4 +37,5 @@ public class UserCreatedDomainEvent : IDomainEvent
         EmailConfirmationToken = emailConfirmationToken;
         OccurredOn = DateTime.UtcNow;
     }
+    
 }
