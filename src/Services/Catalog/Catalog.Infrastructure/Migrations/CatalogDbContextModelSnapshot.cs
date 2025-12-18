@@ -86,8 +86,8 @@ namespace Catalog.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("Price");
 
                     b.Property<int>("Stock")
                         .HasColumnType("integer");

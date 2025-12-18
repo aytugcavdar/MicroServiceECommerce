@@ -33,7 +33,7 @@ namespace Catalog.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    decimal182 = table.Column<decimal>(name: "decimal(18,2)", type: "numeric", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     Stock = table.Column<int>(type: "integer", nullable: false),
                     PictureFileName = table.Column<string>(type: "text", nullable: true),
                     CategoryId = table.Column<Guid>(type: "uuid", nullable: false),

@@ -1,10 +1,15 @@
 ﻿using BuildingBlocks.CrossCutting.Exceptions.Extensions;
 using Catalog.Application;
 using Catalog.Infrastructure;
+using Catalog.Infrastructure.Contexts;
+using HealthChecks.NpgSql;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 builder.Services.AddControllers();
 
@@ -27,6 +32,23 @@ builder.Services.AddHealthChecks()
         tags: new[] { "db", "postgresql" })
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "api" });
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+        try
+        {
+            dbContext.Database.Migrate(); // Tabloları oluşturur
+            Console.WriteLine("✅ Docker Veritabanı Hazır!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Veritabanı Hatası: {ex.Message}");
+        }
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

@@ -4,10 +4,13 @@ using BuildingBlocks.Infrastructure.Outbox;
 using BuildingBlocks.Logging.Extensions;
 using BuildingBlocks.Messaging;
 using BuildingBlocks.Security;
+using HealthChecks.NpgSql;
 using Identity.Application;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Contexts;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,29 +42,29 @@ builder.Services.AddSecurityServices(options =>
     options.EnableTwoFactorAuthentication = false; 
 });
 builder.Services.AddEmailServices(builder.Configuration);
-
-app.MapHealthChecks("/health", new HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var result = JsonSerializer.Serialize(new
-        {
-            status = report.Status.ToString(),
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                description = e.Value.Description,
-                duration = e.Value.Duration.TotalMilliseconds
-            }),
-            totalDuration = report.TotalDuration.TotalMilliseconds
-        });
-        await context.Response.WriteAsync(result);
-    }
-});
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        connectionString: builder.Configuration.GetConnectionString("IdentityConnectionString")!,
+        name: "identity-db",
+        tags: new[] { "db", "postgresql" })
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "api" });
 
 var app = builder.Build();
+
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        
+        dbContext.Database.Migrate();
+        Console.WriteLine("✅ IdentityDB: Tablolar başarıyla oluşturuldu/güncellendi.");
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"❌ IdentityDB Migration Hatası: {ex.Message}");
+}
 
 app.UseSerilogRequestLogging();
 

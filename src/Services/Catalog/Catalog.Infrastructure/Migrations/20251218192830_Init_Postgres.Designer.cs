@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Catalog.Infrastructure.Migrations
 {
     [DbContext(typeof(CatalogDbContext))]
-    [Migration("20251127231849_Init_Postgres")]
+    [Migration("20251218192830_Init_Postgres")]
     partial class Init_Postgres
     {
         /// <inheritdoc />
@@ -89,8 +89,8 @@ namespace Catalog.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("decimal(18,2)");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("Price");
 
                     b.Property<int>("Stock")
                         .HasColumnType("integer");

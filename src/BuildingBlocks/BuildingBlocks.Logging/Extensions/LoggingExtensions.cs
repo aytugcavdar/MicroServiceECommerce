@@ -21,26 +21,25 @@ public static class LoggingExtensions
         this WebApplicationBuilder builder,
         string applicationName)
     {
-        // HttpContextAccessor ekle (CorrelationId için gerekli)
         builder.Services.AddHttpContextAccessor();
-
-        // CorrelationIdEnricher'ı ekle
         builder.Services.AddSingleton<CorrelationIdEnricher>();
 
-        // Bootstrap logger oluştur (Uygulama ayağa kalkarken hata olursa yakalamak için)
         Log.Logger = SerilogConfiguration.CreateBootstrapLogger(applicationName);
-
         Log.Information("🚀 Starting {ApplicationName}...", applicationName);
 
         try
         {
-            // Serilog'u host'a ekle
             builder.Host.UseSerilog((context, services, configuration) =>
             {
-                // Ortama göre logger seç
+                // Seq Adresini Al (Docker içinde 'seq' servisine gitmeli, localhost değil)
+                // appsettings.json'dan okumaya çalış, yoksa varsayılan docker servisine git
+                var seqUrl = context.Configuration["Serilog:WriteTo:2:Args:serverUrl"]
+                             ?? context.Configuration["Serilog:WriteTo:1:Args:serverUrl"]
+                             ?? "http://seq:5341";
+
                 if (context.HostingEnvironment.IsDevelopment())
                 {
-                    // Development logger ayarları
+                    // Development Modu
                     configuration
                         .MinimumLevel.Debug()
                         .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
@@ -48,15 +47,14 @@ public static class LoggingExtensions
                         .Enrich.FromLogContext()
                         .Enrich.WithProperty("Application", applicationName)
                         .Enrich.WithProperty("Environment", "Development")
-                        .Enrich.With(services.GetRequiredService<CorrelationIdEnricher>()) // Correlation ID ekle
+                        .Enrich.With(services.GetRequiredService<CorrelationIdEnricher>())
                         .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-                        .WriteTo.File($"Logs/{applicationName}-dev-.txt", rollingInterval: RollingInterval.Day);
+                        .WriteTo.File($"Logs/{applicationName}-dev-.txt", rollingInterval: RollingInterval.Day)
+                        .WriteTo.Seq(seqUrl); // <--- BU SATIR EKLENDİ!
                 }
                 else
                 {
-                    // Production logger ayarları (Seq, JSON format vs.)
-                    var seqUrl = context.Configuration["Serilog:WriteTo:1:Args:serverUrl"] ?? "http://localhost:5341";
-
+                    // Production Modu
                     configuration
                         .MinimumLevel.Information()
                         .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
@@ -64,7 +62,7 @@ public static class LoggingExtensions
                         .Enrich.WithMachineName()
                         .Enrich.WithProperty("Application", applicationName)
                         .Enrich.WithProperty("Environment", "Production")
-                        .Enrich.With(services.GetRequiredService<CorrelationIdEnricher>()) // Correlation ID ekle
+                        .Enrich.With(services.GetRequiredService<CorrelationIdEnricher>())
                         .WriteTo.Console()
                         .WriteTo.Seq(seqUrl);
                 }
