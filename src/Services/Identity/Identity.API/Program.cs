@@ -6,6 +6,7 @@ using BuildingBlocks.Messaging;
 using BuildingBlocks.Security;
 using HealthChecks.NpgSql;
 using Identity.Application;
+using Identity.Domain.Events;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Contexts;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -48,6 +49,8 @@ builder.Services.AddHealthChecks()
         name: "identity-db",
         tags: new[] { "db", "postgresql" })
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "api" });
+
+EventTypeRegistry.Register("UserCreated", typeof(UserCreatedDomainEvent));
 
 var app = builder.Build();
 

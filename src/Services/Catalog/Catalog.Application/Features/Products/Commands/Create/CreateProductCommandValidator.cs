@@ -30,5 +30,11 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
         RuleFor(x => x.PictureFileName)
             .MaximumLength(255).WithMessage("Picture file name cannot exceed 255 characters")
             .When(x => !string.IsNullOrEmpty(x.PictureFileName));
+
+        RuleFor(x => x.Price)
+            .GreaterThan(0).WithMessage("Price must be greater than 0"); 
+
+        RuleFor(x => x.Stock)
+            .GreaterThanOrEqualTo(0).WithMessage("Stock cannot be negative"); 
     }
 }

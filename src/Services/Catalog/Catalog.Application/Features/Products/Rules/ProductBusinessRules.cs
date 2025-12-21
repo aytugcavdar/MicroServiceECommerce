@@ -82,21 +82,5 @@ public class ProductBusinessRules
             );
     }
 
-    /// <summary>
-    /// Fiyat pozitif olmalı
-    /// </summary>
-    public void PriceShouldBePositive(decimal price)
-    {
-        if (price <= 0)
-            throw new BusinessException("Price must be greater than zero");
-    }
-
-    /// <summary>
-    /// Stok negatif olmamalı
-    /// </summary>
-    public void StockCannotBeNegative(int stock)
-    {
-        if (stock < 0)
-            throw new BusinessException("Stock cannot be negative");
-    }
+    
 }

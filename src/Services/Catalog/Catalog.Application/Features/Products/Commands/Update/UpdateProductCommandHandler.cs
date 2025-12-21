@@ -47,6 +47,8 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         
         await _productRepository.UpdateAsync(product);
 
+        await _productRepository.SaveChangesAsync(cancellationToken);
+
         return new UpdateProductCommandResponse(
             product.Id,
             product.Name,

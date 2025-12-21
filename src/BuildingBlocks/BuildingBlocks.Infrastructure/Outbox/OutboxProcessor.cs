@@ -87,27 +87,23 @@ public class OutboxProcessor<TDbContext> : BackgroundService
         {
             try
             {
-                // Event tipini bul
-                var eventType = Type.GetType(message.Type);
-                if (eventType == null)
+                
+                if (!EventTypeRegistry.Dictionary.TryGetValue(message.Type, out var eventType))
                 {
-                    message.MarkAsFailed($"Event type not found: {message.Type}");
+                    message.MarkAsFailed($"Event type alias not found: {message.Type}");
                     failCount++;
-
-                    _logger.LogWarning(
-                        "⚠️ Event type not found: {Type} - MessageId: {MessageId}",
-                        message.Type,
-                        message.Id);
+                    _logger.LogWarning("⚠️ Unknown event alias: {Type}", message.Type);
                     continue;
                 }
 
-                // JSON'ı event'e çevir
+               
                 _logger.LogInformation("RAW JSON CONTENT: {Content}", message.Content);
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true 
-                };
+
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+                
                 var domainEvent = JsonSerializer.Deserialize(message.Content, eventType, options);
+
                 if (domainEvent == null)
                 {
                     message.MarkAsFailed("Failed to deserialize event");
@@ -115,17 +111,11 @@ public class OutboxProcessor<TDbContext> : BackgroundService
                     continue;
                 }
 
-                // MediatR ile publish et
                 await mediator.Publish(domainEvent, cancellationToken);
 
-                // Başarılı olarak işaretle
                 message.MarkAsProcessed();
                 successCount++;
-
-                _logger.LogInformation(
-                    "✅ Processed outbox message: {MessageId} - {EventType}",
-                    message.Id,
-                    eventType.Name);
+                _logger.LogInformation("✅ Processed: {EventType}", eventType.Name);
             }
             catch (Exception ex)
             {

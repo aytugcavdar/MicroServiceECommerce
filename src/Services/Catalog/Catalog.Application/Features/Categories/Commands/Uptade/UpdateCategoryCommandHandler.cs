@@ -29,6 +29,8 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
 
         await _categoryRepository.UpdateAsync(category);
 
+        await _categoryRepository.SaveChangesAsync(cancellationToken);
+
         return new UpdateCategoryCommandResponse(category.Id, category.Name, category.UpdatedDate ?? DateTime.UtcNow);
     }
 }

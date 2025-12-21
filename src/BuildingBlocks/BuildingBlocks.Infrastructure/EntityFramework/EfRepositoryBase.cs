@@ -27,7 +27,6 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
     {
         entity.CreatedDate = DateTime.UtcNow;
         await _dbContext.AddAsync(entity);
-        await _dbContext.SaveChangesAsync();
         return entity;
     }
 
@@ -37,7 +36,6 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
             entity.CreatedDate = DateTime.UtcNow;
 
         await _dbContext.AddRangeAsync(entities);
-        await _dbContext.SaveChangesAsync();
         return entities;
     }
 
@@ -46,12 +44,10 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
         if (permanent)
         {
             _dbContext.Remove(entity);
-            await _dbContext.SaveChangesAsync();
             return entity;
         }
         entity.DeletedDate = DateTime.UtcNow;
         _dbContext.Update(entity);
-        await _dbContext.SaveChangesAsync();
         return entity;
     }
 
@@ -91,7 +87,6 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
     {
         entity.UpdatedDate = DateTime.UtcNow;
         _dbContext.Update(entity);
-        await _dbContext.SaveChangesAsync();
         return entity;
     }
 
@@ -125,5 +120,10 @@ public class EfRepositoryBase<TEntity,TId, TDbContext>:IAsyncRepository<TEntity,
     public Task<Paginate<TEntity>> GetListAsync(Expression<Func<TEntity, bool>>? predicate = null, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null, bool withDeleted = false, bool enableTracking = true, int index = 0, int size = 10, CancellationToken cancellationToken = default, Func<object, object> include = null)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

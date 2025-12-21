@@ -31,22 +31,14 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
     {
         _logger.Information("📝 Creating category: {Name}", request.Name);
 
-        // ============================================
-        // 1. BUSINESS RULES VALIDATION
-        // ============================================
         await _categoryBusinessRules.CategoryNameShouldBeUnique(
             request.Name,
             cancellationToken: cancellationToken
         );
 
-        // ============================================
-        // 2. CREATE ENTITY
-        // ============================================
+
         Category category = new Category(request.Name);
 
-        // ============================================
-        // 3. SAVE TO DATABASE
-        // ============================================
         await _categoryRepository.AddAsync(category);
 
         _logger.Information(
@@ -55,9 +47,8 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
             category.Name
         );
 
-        // ============================================
-        // 4. RETURN RESPONSE
-        // ============================================
+        await _categoryRepository.SaveChangesAsync(cancellationToken);
+
         return new CreateCategoryCommandResponse
         {
             Id = category.Id,
