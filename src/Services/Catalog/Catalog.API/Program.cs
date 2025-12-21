@@ -24,7 +24,6 @@ builder.Services.AddOpenApi();
 builder.Services.AddCatalogApplicationServices();
 builder.Services.AddCatalogInfrastructureServices(builder.Configuration);
 
-
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         connectionString: builder.Configuration.GetConnectionString("CatalogConnectionString")!,

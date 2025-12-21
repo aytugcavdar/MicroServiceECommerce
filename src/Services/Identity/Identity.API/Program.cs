@@ -42,7 +42,7 @@ builder.Services.AddSecurityServices(options =>
     options.EnableOtpAuthentication = false; 
     options.EnableTwoFactorAuthentication = false; 
 });
-builder.Services.AddEmailServices(builder.Configuration);
+builder.Services.AddEmailServices(builder.Configuration, typeof(Program).Assembly);
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         connectionString: builder.Configuration.GetConnectionString("IdentityConnectionString")!,

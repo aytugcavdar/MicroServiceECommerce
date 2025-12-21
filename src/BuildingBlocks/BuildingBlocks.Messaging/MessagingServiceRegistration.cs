@@ -1,21 +1,20 @@
 ﻿using BuildingBlocks.Messaging.Email;
+using BuildingBlocks.Messaging.MassTransit;
 using BuildingBlocks.Messaging.Templates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text;
-
+using System.Reflection;
 namespace BuildingBlocks.Messaging;
 
 public static class MessagingServiceRegistration
 {
-    /// <summary>
-    /// Email servisi ve template engine'i ekler
-    /// </summary>
     public static IServiceCollection AddEmailServices(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        Assembly? assembly = null)
     {
         // EmailOptions'ı configuration'dan yükle
         services.Configure<EmailOptions>(
@@ -27,6 +26,9 @@ public static class MessagingServiceRegistration
 
         // SMTP Email servisi
         services.AddScoped<IEmailService, SmtpEmailService>();
+
+        //RabbitMQ / MassTransit
+        services.AddMessageBus(configuration, assembly);
 
         return services;
     }
