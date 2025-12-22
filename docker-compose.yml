@@ -70,7 +70,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__CatalogConnectionString=Host=catalog-db;Port=${POSTGRES_PORT};Database=${CATALOG_DB_NAME};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - ConnectionStrings__CatalogConnectionString=Host=catalog-db;Port=5432;Database=MicroECommerce_CatalogDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
     ports:
       - "${CATALOG_API_PORT}:80"
@@ -91,10 +94,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
       
-      - ConnectionStrings__IdentityConnectionString=Host=identity-db;Port=${POSTGRES_PORT};Database=${IDENTITY_DB_NAME};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
+      - ConnectionStrings__IdentityConnectionString=Host=identity-db;Port=5432;Database=MicroECommerce_IdentityDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
       
       - Serilog__WriteTo__2__Args__serverUrl=${SEQ_URL}
-      
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
       - TokenOptions__SecurityKey=${JWT_SECRET}
       - TokenOptions__Issuer=${JWT_ISSUER}
       - TokenOptions__Audience=${JWT_AUDIENCE}

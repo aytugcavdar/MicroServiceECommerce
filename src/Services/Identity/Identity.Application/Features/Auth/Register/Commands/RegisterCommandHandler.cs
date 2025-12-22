@@ -82,6 +82,9 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, RegisterC
 
         _logger.Information("✅ Kullanıcı başarıyla oluşturuldu: {UserId}", user.Id);
 
+
+        await _userRepository.SaveChangesAsync();
+
         // ============================================
         // 6. CEVAP DÖNME
         // ============================================
