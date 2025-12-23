@@ -164,7 +164,7 @@ public class IdentityDbContext : DbContext
             var eventJson = JsonSerializer.Serialize(domainEvent, eventType);
 
             var outboxMessage = new OutboxMessage(
-                type: eventType.AssemblyQualifiedName ?? eventType.FullName ?? eventType.Name,
+                type: eventType.Name,
                 content: eventJson
             );
 

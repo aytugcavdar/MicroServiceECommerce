@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Catalog.Application.Features.Categories.Queries;
+namespace Catalog.Application.Features.Categories.Queries.GetList;
 
 public class GetListCategoryListItemDto
 {

@@ -4,6 +4,7 @@ using Catalog.Application.Features.Categories.Commands.Create;
 using Catalog.Application.Features.Categories.Commands.Delete;
 using Catalog.Application.Features.Categories.Commands.Uptade;
 using Catalog.Application.Features.Categories.Queries;
+using Catalog.Application.Features.Categories.Queries.GetList;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers;
 
@@ -48,5 +49,14 @@ public class CategoryController : BaseController
     {
         var result = await Mediator.Send(command);
         return Ok(ApiResponse<UpdateCategoryCommandResponse>.SuccessResult(result));
+    }
+
+    [HttpGet("tree")]
+    [ProducesResponseType(typeof(ApiResponse<List<CategoryTreeDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTree([FromQuery] bool includeInactive = false)
+    {
+        var query = new GetCategoryTreeQuery { IncludeInactive = includeInactive };
+        var result = await Mediator.Send(query);
+        return Ok(result);
     }
 }

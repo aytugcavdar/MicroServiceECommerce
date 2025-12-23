@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using BuildingBlocks.Core.Requests;
 using BuildingBlocks.Core.Paging;
-namespace Catalog.Application.Features.Categories.Queries;
+namespace Catalog.Application.Features.Categories.Queries.GetList;
 
 public class GetListCategoryQuery:IRequest<Paginate<GetListCategoryListItemDto>>
 {

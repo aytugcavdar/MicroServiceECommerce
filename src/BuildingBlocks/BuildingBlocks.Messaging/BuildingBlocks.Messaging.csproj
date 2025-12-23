@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="SMS\" />
 	  <Folder Include="Templates\EmailTemplates\" />
   </ItemGroup>
 	<ItemGroup>

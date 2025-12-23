@@ -12,6 +12,7 @@
     <Project Path="src/BuildingBlocks/BuildingBlocks.Security/BuildingBlocks.Security.csproj" Id="94be6f9d-7e63-4138-9b9f-ed4fee009d23" />
   </Folder>
   <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Basket/" />
   <Folder Name="/src/Services/Catalog/">
     <Project Path="src/Services/Catalog/Catalog.API/Catalog.API.csproj" Id="09856c6a-421b-4d53-aa9c-97bfef2e204f" />
     <Project Path="src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" Id="abddb19d-c405-4fca-ab88-8ebc805f9921" />
@@ -24,4 +25,11 @@
     <Project Path="src/Services/Identity/Identity.Domain/Identity.Domain.csproj" Id="10bdd726-f3f6-4a96-8f67-dbe861e7786e" />
     <Project Path="src/Services/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="12772a0d-dcf3-4e88-9f43-e7cd87ff3550" />
   </Folder>
+  <Folder Name="/src/Services/Notification/">
+    <Project Path="src/Services/Notification/Notification.API/Notification.API.csproj" Id="0d3b0c0c-1267-4059-beaa-791e37c11c0c" />
+    <Project Path="src/Services/Notification/Notification.Application/Notification.Application.csproj" Id="825efee4-6a25-4355-8d78-bda7d7f2bc7a" />
+    <Project Path="src/Services/Notification/Notification.Domain/Notification.Domain.csproj" Id="32bef04e-3daa-407b-b87b-ba2893dfce33" />
+    <Project Path="src/Services/Notification/Notification.Infrastructure/Notification.Infrastructure.csproj" Id="8b3a59ec-6f9e-4c8a-9c6a-24c74f0d9671" />
+  </Folder>
+  <Folder Name="/src/Services/Order/" />
 </Solution>

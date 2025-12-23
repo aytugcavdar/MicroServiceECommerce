@@ -3,6 +3,7 @@ using BuildingBlocks.CrossCutting.Exceptions.Extensions;
 using BuildingBlocks.Infrastructure.Outbox;
 using BuildingBlocks.Logging.Extensions;
 using BuildingBlocks.Messaging;
+using BuildingBlocks.Messaging.MassTransit;
 using BuildingBlocks.Security;
 using HealthChecks.NpgSql;
 using Identity.Application;
@@ -42,7 +43,7 @@ builder.Services.AddSecurityServices(options =>
     options.EnableOtpAuthentication = false; 
     options.EnableTwoFactorAuthentication = false; 
 });
-builder.Services.AddEmailServices(builder.Configuration, typeof(Program).Assembly);
+builder.Services.AddMessageBus(builder.Configuration, typeof(Program).Assembly);
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         connectionString: builder.Configuration.GetConnectionString("IdentityConnectionString")!,
@@ -50,7 +51,7 @@ builder.Services.AddHealthChecks()
         tags: new[] { "db", "postgresql" })
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "api" });
 
-EventTypeRegistry.Register("UserCreated", typeof(UserCreatedDomainEvent));
+EventTypeRegistry.Register(nameof(UserCreatedDomainEvent), typeof(UserCreatedDomainEvent));
 
 var app = builder.Build();
 

@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Catalog.Application.Features.Categories.Queries;
+namespace Catalog.Application.Features.Categories.Queries.GetList;
 
 public class GetListCategoryQueryHandler:IRequestHandler<GetListCategoryQuery,Paginate<GetListCategoryListItemDto>>
 {
