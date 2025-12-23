@@ -3,7 +3,7 @@ using BuildingBlocks.Core.Paging;
 using Catalog.Application.Features.Categories.Commands.Create;
 using Catalog.Application.Features.Categories.Commands.Delete;
 using Catalog.Application.Features.Categories.Commands.Uptade;
-using Catalog.Application.Features.Categories.Queries;
+using Catalog.Application.Features.Categories.Queries.GetList;
 using Catalog.Domain.Entities;
 using System;
 using System.Collections.Generic;

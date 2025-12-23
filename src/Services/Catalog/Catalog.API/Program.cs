@@ -32,20 +32,23 @@ builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "api" });
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using (var scope = app.Services.CreateScope())
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
-        try
-        {
-            dbContext.Database.Migrate(); // Tabloları oluşturur
-            Console.WriteLine("✅ Docker Veritabanı Hazır!");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Veritabanı Hatası: {ex.Message}");
-        }
+        var context = services.GetRequiredService<CatalogDbContext>();
+        logger.LogInformation("CatalogDB migration'ları uygulanıyor...");
+
+        // Veritabanı yoksa oluşturur, varsa bekleyen migrationları uygular
+        context.Database.Migrate();
+
+        logger.LogInformation("CatalogDB migration'ları başarıyla uygulandı.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "CatalogDB migration uygulanırken bir hata oluştu.");
     }
 }
 

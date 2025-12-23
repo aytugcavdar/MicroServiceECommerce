@@ -24,34 +24,72 @@ public class CatalogDbContext:DbContext
     {
         modelBuilder.Entity<Product>(p =>
         {
-            p.ToTable("Products").HasKey(k=>k.Id);
-            p.Property(p=>p.Id).HasColumnName("Id");
-            p.Property(p=>p.Name).HasColumnName("Name").IsRequired().HasMaxLength(100);
-            p.Property(p=>p.Description).HasColumnName("Description").IsRequired().HasMaxLength(500);
+            p.ToTable("Products").HasKey(k => k.Id);
+            p.Property(p => p.Id).HasColumnName("Id");
+            p.Property(p => p.Name).HasColumnName("Name").IsRequired().HasMaxLength(100);
+            p.Property(p => p.Description).HasColumnName("Description").IsRequired().HasMaxLength(500);
             p.Property(p => p.Price).HasColumnName("Price").HasColumnType("decimal(18,2)").IsRequired();
+            p.Property(p => p.Stock).HasColumnName("Stock").IsRequired();
+            p.Property(p => p.PictureFileName).HasColumnName("PictureFileName").HasMaxLength(255);
 
             p.HasOne(p => p.Category)
-            .WithMany(c => c.Products)
-            .HasForeignKey(p => p.CategoryId);
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict); 
 
-            modelBuilder.Entity<Category>(c =>
-            {
-                c.ToTable("Categories").HasKey(k => k.Id);
-                c.Property(c => c.Name).IsRequired();
-            });
-
-            // Seed Data (Opsiyonel: Veritabanı oluşurken içine örnek veri atar)
-            var electronicsGuid = Guid.Parse("d3e20300-8c99-4458-96a4-4e28e461f31f");
-            modelBuilder.Entity<Category>().HasData(
-                new Category
-                {
-                    Id = electronicsGuid,
-                    Name = "Electronics"
-                }
-            );
-            modelBuilder.Entity<Product>()
-                .HasQueryFilter(p => p.DeletedDate == null);
+            p.HasQueryFilter(p => p.DeletedDate == null);
         });
+
+        modelBuilder.Entity<Category>(c =>
+        {
+            c.ToTable("Categories").HasKey(k => k.Id);
+            c.Property(c => c.Id).HasColumnName("Id");
+            c.Property(c => c.Name).HasColumnName("Name").IsRequired().HasMaxLength(100);
+            c.Property(c => c.IsActive).HasColumnName("IsActive").IsRequired();
+            c.Property(c => c.ParentCategoryId).HasColumnName("ParentCategoryId");
+
+            c.HasOne(c => c.ParentCategory)
+                .WithMany(c => c.SubCategories)
+                .HasForeignKey(c => c.ParentCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            c.HasIndex(c => c.ParentCategoryId);
+            c.HasIndex(c => c.IsActive);
+
+            c.HasQueryFilter(c => c.DeletedDate == null);
+        });
+
+        var electronicsId = Guid.Parse("d3e20300-8c99-4458-96a4-4e28e461f31f");
+        var phonesId = Guid.Parse("a1b2c3d4-e5f6-7890-1234-567890abcdef");
+        var laptopsId = Guid.Parse("f1e2d3c4-b5a6-9780-4321-fedcba098765");
+
+        modelBuilder.Entity<Category>().HasData(
+            new Category
+            {
+                Id = electronicsId,
+                Name = "Electronics",
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            },
+            new Category
+            {
+                Id = phonesId,
+                Name = "Mobile Phones",
+                ParentCategoryId = electronicsId,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            },
+            new Category
+            {
+                Id = laptopsId,
+                Name = "Laptops",
+                ParentCategoryId = electronicsId,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            }
+        );
+
+        base.OnModelCreating(modelBuilder);
 
     }
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
