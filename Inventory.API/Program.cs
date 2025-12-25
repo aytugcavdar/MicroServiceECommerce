@@ -1,3 +1,6 @@
+using BuildingBlocks.Logging.Extensions;
+using Inventory.Application;
+using Inventory.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.AddSerilogLogging("MicroECommerce.Inventory");
+builder.Services.AddInventoryInfrastructure(builder.Configuration);
+builder.Services.AddInventoryApplication();
+
 
 var app = builder.Build();
 
@@ -12,7 +19,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+app.UseSerilogRequestLogging();
 
 app.UseHttpsRedirection();
 

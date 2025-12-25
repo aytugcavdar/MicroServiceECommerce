@@ -1,4 +1,4 @@
-namespace Basket.API
+namespace Inventory.API
 {
     public class WeatherForecast
     {

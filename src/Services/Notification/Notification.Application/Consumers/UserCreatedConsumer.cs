@@ -53,6 +53,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedIntegrationEvent>
         {
             bool emailSent;
 
+            // Token varsa confirmation email, yoksa welcome email
             if (!string.IsNullOrEmpty(message.EmailConfirmationToken))
             {
                 emailSent = await _emailService.SendEmailConfirmationAsync(
@@ -91,6 +92,7 @@ public class UserCreatedConsumer : IConsumer<UserCreatedIntegrationEvent>
             notificationLog.MarkAsFailed(ex.Message);
             _logger.Error(ex, "❌ Error sending email to {Email}", message.Email);
 
+            // Hata durumunda retry mekanizması
             if (notificationLog.CanRetry())
             {
                 throw;
