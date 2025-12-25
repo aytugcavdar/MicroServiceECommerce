@@ -12,7 +12,9 @@
     <Project Path="src/BuildingBlocks/BuildingBlocks.Security/BuildingBlocks.Security.csproj" Id="94be6f9d-7e63-4138-9b9f-ed4fee009d23" />
   </Folder>
   <Folder Name="/src/Services/" />
-  <Folder Name="/src/Services/Basket/" />
+  <Folder Name="/src/Services/Basket/">
+    <Project Path="src/Services/Basket/Basket.API/Basket.API.csproj" Id="fd2a7438-6e92-4819-b925-9df3ad489feb" />
+  </Folder>
   <Folder Name="/src/Services/Catalog/">
     <Project Path="src/Services/Catalog/Catalog.API/Catalog.API.csproj" Id="09856c6a-421b-4d53-aa9c-97bfef2e204f" />
     <Project Path="src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" Id="abddb19d-c405-4fca-ab88-8ebc805f9921" />
