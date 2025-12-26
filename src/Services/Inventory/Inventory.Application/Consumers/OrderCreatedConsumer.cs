@@ -1,10 +1,11 @@
-﻿using System;
+﻿using BuildingBlocks.Messaging.IntegrationEvents;
+using Inventory.Infrastructure.Contexts;
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Inventory.Infrastructure.Contexts;
-using BuildingBlocks.Messaging.IntegrationEvents;
-using Microsoft.EntityFrameworkCore;
-using MassTransit;
 
 namespace Inventory.Application.Consumers;
 
@@ -12,12 +13,12 @@ public class OrderCreatedConsumer : IConsumer<OrderCreatedEvent>
 {
     private readonly InventoryDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
-    private readonly Serilog.ILogger _logger;
+    private readonly ILogger<OrderCreatedConsumer> _logger;
 
     public OrderCreatedConsumer(
         InventoryDbContext context,
         IPublishEndpoint publishEndpoint,
-        Serilog.ILogger<OrderCreatedConsumer> logger)
+        ILogger<OrderCreatedConsumer> logger)
     {
         _context = context;
         _publishEndpoint = publishEndpoint;
