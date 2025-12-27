@@ -60,6 +60,17 @@ services:
       - microecommerce-network
     restart: unless-stopped
 
+  basketdb:
+    image: redis:alpine
+    container_name: basketdb
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - basketdb_data:/data
+
+
+  basketdb_data: # Bunu en alttaki volumes kısmına ekleyin
   # --- MESSAGE BROKER ---
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -225,3 +236,4 @@ volumes:
   identity-db-data:
   notification-db-data:
   seq-data:
+  basketdb_data:

@@ -12,7 +12,9 @@
     <Project Path="src/BuildingBlocks/BuildingBlocks.Security/BuildingBlocks.Security.csproj" Id="94be6f9d-7e63-4138-9b9f-ed4fee009d23" />
   </Folder>
   <Folder Name="/src/Services/" />
-  <Folder Name="/src/Services/Basket/" />
+  <Folder Name="/src/Services/Basket/">
+    <Project Path="src/Services/Basket/Basket.API/Basket.API.csproj" Id="8473d85f-d53f-4fa4-b686-d53d5ce071cb" />
+  </Folder>
   <Folder Name="/src/Services/Catalog/">
     <Project Path="src/Services/Catalog/Catalog.API/Catalog.API.csproj" Id="09856c6a-421b-4d53-aa9c-97bfef2e204f" />
     <Project Path="src/Services/Catalog/Catalog.Application/Catalog.Application.csproj" Id="abddb19d-c405-4fca-ab88-8ebc805f9921" />
@@ -26,10 +28,10 @@
     <Project Path="src/Services/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="12772a0d-dcf3-4e88-9f43-e7cd87ff3550" />
   </Folder>
   <Folder Name="/src/Services/Inventory/">
-    <Project Path="Inventory.API/Inventory.API.csproj" Id="7d316352-af12-45cb-9e73-a16128806969" />
-    <Project Path="src/Services/Inventory/Inventory.Application/Inventory.Application.csproj" Id="7c5e462d-8acd-4d90-b597-9ea1b21184b8" />
-    <Project Path="src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj" Id="3edb37f4-2a5f-4146-b643-09934fd71b29" />
-    <Project Path="src/Services/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" Id="b743ab39-f656-46d2-8b81-38b7cc15d45a" />
+    <Project Path="src/Services/Inventory/Inventory.API/Inventory.API.csproj" Id="f650eb13-17fe-428f-9651-65b8dec6bf93" />
+    <Project Path="src/Services/Inventory/Inventory.Application/Inventory.Application.csproj" Id="ed52e44a-1938-4900-9c92-98e8c9b21560" />
+    <Project Path="src/Services/Inventory/Inventory.Domain/Inventory.Domain.csproj" Id="c7060331-b5b6-4f35-8249-fa657a476143" />
+    <Project Path="src/Services/Inventory/Inventory.Infrastructure/Inventory.Infrastructure.csproj" Id="f71aa9f8-61b9-4c68-aa8b-2749d25b6596" />
   </Folder>
   <Folder Name="/src/Services/Notification/">
     <Project Path="src/Services/Notification/Notification.API/Notification.API.csproj" Id="0d3b0c0c-1267-4059-beaa-791e37c11c0c" />
