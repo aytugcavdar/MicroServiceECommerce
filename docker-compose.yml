@@ -69,8 +69,6 @@ services:
     volumes:
       - basketdb_data:/data
 
-
-  basketdb_data: # Bunu en alttaki volumes kısmına ekleyin
   # --- MESSAGE BROKER ---
   rabbitmq:
     image: rabbitmq:3-management-alpine

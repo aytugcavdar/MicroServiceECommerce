@@ -1,5 +1,8 @@
-using Basket.API.Repositories;
+﻿using Basket.API.Repositories;
+using BuildingBlocks.CrossCutting.Exceptions.Extensions;
+using BuildingBlocks.Logging.Extensions;
 using MassTransit;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-
+builder.AddSerilogLogging("MicroECommerce.Basket");
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -32,6 +35,13 @@ builder.Services.AddMassTransit(config =>
         });
     });
 });
+builder.Services.AddHealthChecks()
+    .AddRedis(
+        builder.Configuration.GetValue<string>("CacheSettings:ConnectionString")!,
+        name: "basket-redis",
+        tags: new[] { "redis", "cache" })
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
+
 
 var app = builder.Build();
 
@@ -43,10 +53,33 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.ConfigureCustomExceptionMiddleware();
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds
+            })
+        });
+        await context.Response.WriteAsync(result);
+    }
+});
+
+Serilog.Log.Information("🚀 Basket.API starting...");
 app.Run();
+Serilog.Log.Information("✅ Basket.API stopped");

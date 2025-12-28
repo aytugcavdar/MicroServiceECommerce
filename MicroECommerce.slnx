@@ -14,6 +14,9 @@
   <Folder Name="/src/Services/" />
   <Folder Name="/src/Services/Basket/">
     <Project Path="src/Services/Basket/Basket.API/Basket.API.csproj" Id="8473d85f-d53f-4fa4-b686-d53d5ce071cb" />
+    <Project Path="src/Services/Basket/Basket.Application/Basket.Application.csproj" Id="88b12e53-e961-4a8c-9ca9-7b2ba5cca83f" />
+    <Project Path="src/Services/Basket/Basket.Domain/Basket.Domain.csproj" Id="f336af87-6e67-41d1-8d60-28dd3dc93a41" />
+    <Project Path="src/Services/Basket/Basket.Infrastructure/Basket.Infrastructure.csproj" Id="52b4d329-360a-4bb9-9e55-e54989600ed0" />
   </Folder>
   <Folder Name="/src/Services/Catalog/">
     <Project Path="src/Services/Catalog/Catalog.API/Catalog.API.csproj" Id="09856c6a-421b-4d53-aa9c-97bfef2e204f" />
