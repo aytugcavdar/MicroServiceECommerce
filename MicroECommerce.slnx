@@ -42,5 +42,10 @@
     <Project Path="src/Services/Notification/Notification.Domain/Notification.Domain.csproj" Id="32bef04e-3daa-407b-b87b-ba2893dfce33" />
     <Project Path="src/Services/Notification/Notification.Infrastructure/Notification.Infrastructure.csproj" Id="8b3a59ec-6f9e-4c8a-9c6a-24c74f0d9671" />
   </Folder>
-  <Folder Name="/src/Services/Order/" />
+  <Folder Name="/src/Services/Order/">
+    <Project Path="src/Services/Order/Order.API/Order.API.csproj" Id="f55f142a-a2cf-4ef9-8bb8-9c109d55519a" />
+    <Project Path="src/Services/Order/Order.Application/Order.Application.csproj" Id="1b2de00a-626c-4ba6-aa07-9852aa10db43" />
+    <Project Path="src/Services/Order/Order.Domain/Order.Domain.csproj" Id="9978e685-fa4f-4801-b412-82eb382bbaa7" />
+    <Project Path="src/Services/Order/Order.Infrastructure/Order.Infrastructure.csproj" Id="9342881b-be72-451e-9026-e6db5c8ea733" />
+  </Folder>
 </Solution>

@@ -1,8 +1,11 @@
 ﻿using Basket.API.Repositories;
+using Basket.Application;
+using Basket.Application.Services;
 using BuildingBlocks.CrossCutting.Exceptions.Extensions;
 using BuildingBlocks.Logging.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +23,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
 });
-builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+builder.Services.AddBasketApplicationServices();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
