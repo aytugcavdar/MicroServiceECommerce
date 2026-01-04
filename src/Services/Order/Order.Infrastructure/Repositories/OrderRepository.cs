@@ -1,4 +1,5 @@
 ﻿using BuildingBlocks.Infrastructure.EntityFramework;
+using Order.Application.Services.Repositories;
 using Order.Infrastructure.Contexts;
 using System;
 using System.Collections.Generic;

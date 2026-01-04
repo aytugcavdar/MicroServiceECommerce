@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AutoMapper;
+using Basket.API.Entities;
+using Basket.Application.Features.Baskets.Queries.GetBasket;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

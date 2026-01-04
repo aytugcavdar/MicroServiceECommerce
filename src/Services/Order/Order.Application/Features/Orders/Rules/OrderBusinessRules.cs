@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FluentValidation;
+using Order.Application.Features.Orders.Commands;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
