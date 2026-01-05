@@ -19,5 +19,15 @@ public class BasketCheckoutEvent
     public string CardNumber { get; set; }
     public string Expiration { get; set; }
     public string CVV { get; set; }
-    public string BuyerId { get; set; }
+    public Guid BuyerId { get; set; }
+
+    public List<BasketItemMessage> BasketItems { get; set; }
+}
+
+public class BasketItemMessage
+{
+    public Guid ProductId { get; set; }
+    public string ProductName { get; set; }
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
 }

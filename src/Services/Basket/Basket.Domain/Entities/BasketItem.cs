@@ -2,7 +2,7 @@
 
 public class BasketItem
 {
-    public int ProductId { get; private set; }
+    public Guid ProductId { get; private set; }
     public string ProductName { get; private set; }
     public int Quantity { get; private set; }
     public string Color { get; private set; }
@@ -14,7 +14,7 @@ public class BasketItem
         Color = string.Empty;
     }
 
-    public BasketItem(int productId, string productName, int quantity, string color, decimal price)
+    public BasketItem(Guid productId, string productName, int quantity, string color, decimal price)
     {
         if (quantity <= 0)
             throw new ArgumentException("Quantity must be greater than 0", nameof(quantity));

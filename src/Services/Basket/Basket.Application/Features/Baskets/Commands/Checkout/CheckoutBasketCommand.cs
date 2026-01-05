@@ -19,4 +19,5 @@ public class CheckoutBasketCommand : IRequest<CheckoutBasketCommandResponse>
     public string CardNumber { get; set; } = string.Empty;
     public string Expiration { get; set; } = string.Empty;
     public string CVV { get; set; } = string.Empty;
+    public Guid BuyerId { get; set; }
 }

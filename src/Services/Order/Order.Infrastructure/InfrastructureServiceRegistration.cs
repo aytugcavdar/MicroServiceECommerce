@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Order.Application.Services.Repositories;
 using Order.Infrastructure.Contexts;
 using Order.Infrastructure.Repositories;
 using System;

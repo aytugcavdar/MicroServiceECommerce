@@ -45,6 +45,7 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Cre
         {
             OrderId = order.Id,
             BuyerId = order.UserId,
+            TotalPrice = order.TotalPrice,
             OrderItems = order.OrderItems.Select(x => new OrderItemMessage
             {
                 ProductId = x.ProductId,

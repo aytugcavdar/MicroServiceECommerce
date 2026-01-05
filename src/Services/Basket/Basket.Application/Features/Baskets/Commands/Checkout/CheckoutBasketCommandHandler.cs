@@ -49,7 +49,14 @@ public class CheckoutBasketCommandHandler : IRequestHandler<CheckoutBasketComman
             CardNumber = request.CardNumber,
             Expiration = request.Expiration,
             CVV = request.CVV,
-            BuyerId = request.UserName
+            BuyerId = request.BuyerId,
+            BasketItems = basket.Items.Select(x => new BasketItemMessage
+            {
+                ProductId = x.ProductId, 
+                ProductName = x.ProductName,
+                Price = x.Price,
+                Quantity = x.Quantity
+            }).ToList()
         };
 
         await _publishEndpoint.Publish(eventMessage, cancellationToken);
