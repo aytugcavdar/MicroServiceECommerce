@@ -1,79 +1,23 @@
 services:
 
-  # --- VERİTABANLARI ---
-  catalog-db:
+  # --- VERİTABANI (POSTGRESQL - TEK SUNUCU) ---
+  postgres:
     image: postgres:16-alpine
-    container_name: catalog-db
+    container_name: postgres
     environment:
-      POSTGRES_DB: ${CATALOG_DB_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Varsayılan bir DB oluşturur, diğerlerini EF Core kod tarafında oluşturacaktır
+      POSTGRES_DB: postgres 
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - catalog-db-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - microecommerce-network
     restart: unless-stopped
 
-  identity-db:
-    image: postgres:16-alpine
-    container_name: identity-db
-    environment:
-      POSTGRES_DB: ${IDENTITY_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5433:5432"
-    volumes:
-      - identity-db-data:/var/lib/postgresql/data
-    networks:
-      - microecommerce-network
-    restart: unless-stopped
-
-  inventory-db:
-    image: postgres:16-alpine
-    container_name: inventory-db
-    environment:
-      POSTGRES_DB: MicroECommerce_InventoryDb
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5435:5432"
-    volumes:
-      - inventory-db-data:/var/lib/postgresql/data
-    networks:
-      - microecommerce-network
-    restart: unless-stopped
-  notification-db:
-    image: postgres:16-alpine
-    container_name: notification-db
-    environment:
-      POSTGRES_DB: ${NOTIFICATION_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5434:5432"
-    volumes:
-      - notification-db-data:/var/lib/postgresql/data
-    networks:
-      - microecommerce-network
-    restart: unless-stopped
-
-  order-db:
-    image: postgres:16-alpine
-    container_name: order-db
-    environment:
-      POSTGRES_DB: ${ORDER_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5436:5432"
-    volumes:
-      - order-db-data:/var/lib/postgresql/data
-    networks:
-      - microecommerce-network
-    restart: unless-stopped
+  # --- REDIS (SEPET) ---
   basketdb:
     image: redis:alpine
     container_name: basketdb
@@ -82,8 +26,10 @@ services:
       - "6379:6379"
     volumes:
       - basketdb_data:/data
+    networks:
+      - microecommerce-network
 
-  # --- MESSAGE BROKER ---
+  # --- MESSAGE BROKER (RABBITMQ) ---
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
@@ -97,7 +43,7 @@ services:
       - microecommerce-network
     restart: unless-stopped
 
-  # --- LOGGING ---
+  # --- LOGGING (SEQ) ---
   seq:
     image: datalust/seq:latest
     container_name: seq
@@ -113,6 +59,7 @@ services:
     restart: unless-stopped
 
   # --- API SERVİSLERİ ---
+
   catalog-api:
     image: ${DOCKER_REGISTRY-}catalog-api
     container_name: catalog-api
@@ -122,15 +69,15 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
-      - RabbitMQ__Host=rabbitmq
+      - ConnectionStrings__CatalogConnectionString=${CONNECTION_STRING_CATALOG}
+      - RabbitMQ__Host=${RABBITMQ_HOST}
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
-      - ConnectionStrings__CatalogConnectionString=Host=catalog-db;Port=5432;Database=MicroECommerce_CatalogDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
     ports:
       - "${CATALOG_API_PORT}:80"
     depends_on:
-      - catalog-db
+      - postgres
       - rabbitmq
       - seq
     networks:
@@ -145,16 +92,18 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__IdentityConnectionString=Host=identity-db;Port=5432;Database=MicroECommerce_IdentityDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
-      - Serilog__WriteTo__2__Args__serverUrl=${SEQ_URL}
-      - RabbitMQ__Host=rabbitmq
+      - ConnectionStrings__IdentityConnectionString=${CONNECTION_STRING_IDENTITY}
+      - RabbitMQ__Host=${RABBITMQ_HOST}
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+      # JWT Ayarları
       - TokenOptions__SecurityKey=${JWT_SECRET}
       - TokenOptions__Issuer=${JWT_ISSUER}
       - TokenOptions__Audience=${JWT_AUDIENCE}
       - TokenOptions__AccessTokenExpiration=${JWT_ACCESS_EXP_MINUTES}
       - TokenOptions__RefreshTokenExpiration=${JWT_REFRESH_EXP_MINUTES}
+      # Email Ayarları
       - EmailOptions__SmtpServer=${SMTP_HOST}
       - EmailOptions__SmtpPort=${SMTP_PORT}
       - EmailOptions__Username=${SMTP_USER}
@@ -163,35 +112,7 @@ services:
     ports:
       - "${IDENTITY_API_PORT}:80"
     depends_on:
-      - identity-db
-      - rabbitmq
-      - seq
-    networks:
-      - microecommerce-network
-
-  notification-api:
-    image: ${DOCKER_REGISTRY-}notification-api
-    container_name: notification-api
-    build:
-      context: .
-      dockerfile: src/Services/Notification/Notification.API/Dockerfile
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__NotificationConnectionString=Host=notification-db;Port=5432;Database=MicroECommerce_NotificationDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
-      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
-      - RabbitMQ__Host=rabbitmq
-      - RabbitMQ__UserName=${RABBITMQ_USER}
-      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
-      - EmailOptions__SmtpServer=${SMTP_HOST}
-      - EmailOptions__SmtpPort=${SMTP_PORT}
-      - EmailOptions__Username=${SMTP_USER}
-      - EmailOptions__Password=${SMTP_PASS}
-      - EmailOptions__SenderEmail=${SENDER_EMAIL}
-    ports:
-      - "${NOTIFICATION_API_PORT}:80"
-    depends_on:
-      - notification-db
+      - postgres
       - rabbitmq
       - seq
     networks:
@@ -206,15 +127,43 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__InventoryConnectionString=Host=inventory-db;Port=5432;Database=MicroECommerce_InventoryDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
-      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
-      - RabbitMQ__Host=rabbitmq
+      - ConnectionStrings__InventoryConnectionString=${CONNECTION_STRING_INVENTORY}
+      - RabbitMQ__Host=${RABBITMQ_HOST}
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
     ports:
-      - "${INVENTORY_API_PORT}:80" 
+      - "${INVENTORY_API_PORT}:80"
     depends_on:
-      - inventory-db
+      - postgres
+      - rabbitmq
+      - seq
+    networks:
+      - microecommerce-network
+
+  notification-api:
+    image: ${DOCKER_REGISTRY-}notification-api
+    container_name: notification-api
+    build:
+      context: .
+      dockerfile: src/Services/Notification/Notification.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__NotificationConnectionString=${CONNECTION_STRING_NOTIFICATION}
+      - RabbitMQ__Host=${RABBITMQ_HOST}
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+      - EmailOptions__SmtpServer=${SMTP_HOST}
+      - EmailOptions__SmtpPort=${SMTP_PORT}
+      - EmailOptions__Username=${SMTP_USER}
+      - EmailOptions__Password=${SMTP_PASS}
+      - EmailOptions__SenderEmail=${SENDER_EMAIL}
+    ports:
+      - "${NOTIFICATION_API_PORT}:80"
+    depends_on:
+      - postgres
       - rabbitmq
       - seq
     networks:
@@ -229,20 +178,43 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__OrderConnectionString=Host=order-db;Port=5432;Database=MicroECommerce_OrderDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};
-      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
-      - RabbitMQ__Host=rabbitmq
+      - ConnectionStrings__OrderConnectionString=${CONNECTION_STRING_ORDER}
+      - RabbitMQ__Host=${RABBITMQ_HOST}
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
     ports:
       - "${ORDER_API_PORT}:80"
     depends_on:
-      - order-db
+      - postgres
       - rabbitmq
       - seq
     networks:
       - microecommerce-network
-  # --- API GATEWAY ---
+
+  basket-api:
+    image: ${DOCKER_REGISTRY-}basket-api
+    container_name: basket-api
+    build:
+      context: .
+      dockerfile: src/Services/Basket/Basket.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__Redis=${CONNECTION_STRING_BASKET}
+      - RabbitMQ__Host=${RABBITMQ_HOST}
+      - RabbitMQ__UserName=${RABBITMQ_USER}
+      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+    ports:
+      - "${BASKET_API_PORT}:80"
+    depends_on:
+      - basketdb
+      - rabbitmq
+      - seq
+    networks:
+      - microecommerce-network
+
   api-gateway:
     image: ${DOCKER_REGISTRY-}api-gateway
     container_name: api-gateway
@@ -258,6 +230,9 @@ services:
     depends_on:
       - catalog-api
       - identity-api
+      - order-api
+      - basket-api
+      - inventory-api
       - seq
     networks:
       - microecommerce-network
@@ -267,9 +242,6 @@ networks:
     driver: bridge
 
 volumes:
-  catalog-db-data:
-  identity-db-data:
-  notification-db-data:
-  order-db-data:
+  postgres-data:
   seq-data:
   basketdb_data:

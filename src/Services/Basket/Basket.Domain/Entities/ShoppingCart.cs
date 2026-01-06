@@ -38,7 +38,7 @@ public class ShoppingCart : Entity<string>, IAggregateRoot
         UpdatedDate = DateTime.UtcNow;
     }
 
-    public void RemoveItem(int productId)
+    public void RemoveItem(Guid productId)
     {
         var item = Items.FirstOrDefault(i => i.ProductId == productId);
         if (item != null)
@@ -48,7 +48,7 @@ public class ShoppingCart : Entity<string>, IAggregateRoot
         }
     }
 
-    public void UpdateItemQuantity(int productId, int quantity)
+    public void UpdateItemQuantity(Guid productId, int quantity)
     {
         var item = Items.FirstOrDefault(i => i.ProductId == productId);
         if (item != null)
@@ -66,5 +66,5 @@ public class ShoppingCart : Entity<string>, IAggregateRoot
 
     public bool IsEmpty => !Items.Any();
 
-    public bool HasItem(int productId) => Items.Any(i => i.ProductId == productId);
+    public bool HasItem(Guid productId) => Items.Any(i => i.ProductId == productId);
 }

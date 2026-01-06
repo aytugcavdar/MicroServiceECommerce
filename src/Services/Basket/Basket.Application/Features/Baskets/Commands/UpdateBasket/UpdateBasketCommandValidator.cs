@@ -15,8 +15,7 @@ public class UpdateBasketCommandValidator : AbstractValidator<UpdateBasketComman
 
         RuleForEach(x => x.Items).ChildRules(item =>
         {
-            item.RuleFor(x => x.ProductId)
-                .GreaterThan(0).WithMessage("ProductId must be greater than 0");
+            item.RuleFor(x => x.ProductId).NotEmpty();
 
             item.RuleFor(x => x.Quantity)
                 .GreaterThan(0).WithMessage("Quantity must be greater than 0")
