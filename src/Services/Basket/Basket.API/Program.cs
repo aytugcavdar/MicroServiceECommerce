@@ -1,6 +1,7 @@
 ﻿using Basket.API.Repositories;
 using Basket.Application;
 using Basket.Application.Services;
+using Basket.Infrastructure;
 using BuildingBlocks.CrossCutting.Exceptions.Extensions;
 using BuildingBlocks.Logging.Extensions;
 using MassTransit;
@@ -24,6 +25,8 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
 });
 builder.Services.AddBasketApplicationServices();
+
+builder.Services.AddBasketInfrastructureServices(builder.Configuration);
 
 builder.Services.AddAutoMapper(typeof(Program));
 

@@ -1,11 +1,7 @@
-﻿using BuildingBlocks.Messaging.MassTransit;
-using Inventory.Application.Consumers;
+﻿using Inventory.Application.Consumers;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Inventory.Application;
 
@@ -20,12 +16,17 @@ public static class ApplicationServiceRegistration
             x.UsingRabbitMq((context, cfg) =>
             {
                 var configuration = context.GetRequiredService<IConfiguration>();
-                var rabbitMqOptions = configuration.GetSection("RabbitMqOptions").Get<RabbitMqOptions>();
 
-                cfg.Host(rabbitMqOptions.Host, h =>
+                // HATA BURADAYDI: RabbitMqOptions sınıfı yerine doğrudan okuyoruz.
+                // Eğer config gelmezse varsayılan değerleri ("rabbitmq", "guest") kullanır.
+                var host = configuration["RabbitMQ:Host"] ?? "rabbitmq";
+                var userName = configuration["RabbitMQ:UserName"] ?? "guest";
+                var password = configuration["RabbitMQ:Password"] ?? "guest";
+
+                cfg.Host(host, "/", h =>
                 {
-                    h.Username(rabbitMqOptions.UserName);
-                    h.Password(rabbitMqOptions.Password);
+                    h.Username(userName);
+                    h.Password(password);
                 });
 
                 cfg.ReceiveEndpoint("stock-order-created-queue", e =>
