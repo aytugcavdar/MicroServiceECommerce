@@ -9,7 +9,7 @@ namespace Order.Domain.Entities;
 public class Order : Entity<Guid>, IAggregateRoot
 {
     public Guid UserId { get; private set; }
-    public Address Address { get; private set; } = default!;
+    public Address Address { get; private set; }
     public OrderStatus Status { get; private set; }
     public decimal TotalPrice { get; private set; }
     public DateTime CreatedDate { get; private set; }
@@ -37,7 +37,7 @@ public class Order : Entity<Guid>, IAggregateRoot
         var orderItem = new OrderItem(productId, productName, price, quantity);
         _orderItems.Add(orderItem);
 
-        // Her ürün eklendiğinde toplam fiyat güncellensin
+        
         CalculateTotalPrice();
     }
 
@@ -45,8 +45,17 @@ public class Order : Entity<Guid>, IAggregateRoot
     {
         TotalPrice = _orderItems.Sum(x => x.Price * x.Quantity);
     }
+    public void UpdateAddress(Address newAddress)
+    {
+        
+        if (Status != OrderStatus.Submitted)
+        {
+            throw new Exception("Sipariş işleme alındığı için adres güncellenemez.");
+        }
 
-    // Sipariş statüsünü güncelleme metodu
+        Address = newAddress;
+    }
+
     public void UpdateStatus(OrderStatus newStatus)
     {
         Status = newStatus;

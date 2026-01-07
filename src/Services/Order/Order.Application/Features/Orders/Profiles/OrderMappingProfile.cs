@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using BuildingBlocks.Messaging.IntegrationEvents;
-using Order.Application.Features.Orders.Commands;
+using Order.Application.Features.Orders.Commands.CreateOrder;
 using Order.Application.Features.Orders.Dtos;
 using Order.Domain.Entities;
 using System;

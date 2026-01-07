@@ -5,8 +5,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddControllers(); 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(); 
+
+
 builder.Services.AddOpenApi();
 builder.AddSerilogLogging("MicroECommerce.Inventory");
 builder.Services.AddInventoryInfrastructure(builder.Configuration);
