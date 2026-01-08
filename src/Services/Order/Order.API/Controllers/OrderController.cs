@@ -1,7 +1,14 @@
-﻿using Identity.API.Controllers;
+﻿using BuildingBlocks.Core.Paging;
+using BuildingBlocks.Core.Requests;
+using BuildingBlocks.Core.Responses;
+using Identity.API.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Order.Application.Features.Orders.Commands.CreateOrder;
+using Order.Application.Features.Orders.Queries.GetOrderById;
+using Order.Application.Features.Orders.Queries.GetOrderStatistics;
+using Order.Application.Features.Orders.Queries.GetUserOrders;
+using Order.Domain.Enums;
 
 namespace Order.API.Controllers;
 
@@ -10,9 +17,61 @@ namespace Order.API.Controllers;
 public class OrderController : BaseController
 {
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateOrderCommand createOrderCommand)
+    [ProducesResponseType(typeof(ApiResponse<CreateOrderCommandResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Create([FromBody] CreateOrderCommand command)
     {
-        CreateOrderCommandResponse response = await Mediator.Send(createOrderCommand);
-        return Ok(response);
+
+        var response = await Mediator.Send(command);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = response.OrderId },
+            ApiResponse<CreateOrderCommandResponse>.SuccessResult(
+                response,
+                "Order created successfully"
+            )
+        );
     }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<GetOrderByIdResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var query = new GetOrderByIdQuery
+        {
+            OrderId = id
+        };
+
+        var response = await Mediator.Send(query);
+
+        return Ok(ApiResponse<GetOrderByIdResponse>.SuccessResult(response));
+    }
+
+    [HttpGet("my-orders")]
+    [ProducesResponseType(typeof(ApiResponse<Paginate<GetUserOrdersListItemDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyOrders(
+        [FromQuery] PageRequest pageRequest,
+        [FromQuery] OrderStatus? statusFilter = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null)
+    {
+        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001"); // Test için
+
+        var query = new GetUserOrdersQuery
+        {
+            UserId = userId,
+            PageRequest = pageRequest,
+            StatusFilter = statusFilter,
+            FromDate = fromDate,
+            ToDate = toDate
+        };
+
+        var response = await Mediator.Send(query);
+
+        return Ok(ApiResponse<Paginate<GetUserOrdersListItemDto>>.SuccessResult(response));
+    }
+
+   
 }

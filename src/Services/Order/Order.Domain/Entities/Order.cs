@@ -1,5 +1,6 @@
 ﻿using BuildingBlocks.Core.Domain;
 using Order.Domain.Enums;
+using Order.Domain.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -30,6 +31,13 @@ public class Order : Entity<Guid>, IAggregateRoot
         Address = address;
         Status = OrderStatus.Submitted;
         CreatedDate = DateTime.UtcNow;
+
+        AddDomainEvent(new OrderCreatedDomainEvent(
+            Id,
+            userId,
+            0, 
+            Array.Empty<OrderItem>()
+        ));
     }
 
     public void AddOrderItem(Guid productId, string productName, decimal price, int quantity)
@@ -56,8 +64,25 @@ public class Order : Entity<Guid>, IAggregateRoot
         Address = newAddress;
     }
 
-    public void UpdateStatus(OrderStatus newStatus)
+    public void UpdateStatus(OrderStatus newStatus, string? reason = null)
     {
+        var oldStatus = Status;
         Status = newStatus;
+
+        AddDomainEvent(new OrderStatusChangedDomainEvent(
+            Id,
+            oldStatus,
+            newStatus,
+            reason
+        ));
+
+        if (newStatus == OrderStatus.Completed)
+        {
+            AddDomainEvent(new OrderCompletedDomainEvent(Id, UserId, DateTime.UtcNow));
+        }
+        else if (newStatus == OrderStatus.Canceled || newStatus == OrderStatus.Failed)
+        {
+            AddDomainEvent(new OrderCancelledDomainEvent(Id, reason ?? "Unknown"));
+        }
     }
 }
