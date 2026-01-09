@@ -4,10 +4,13 @@ using Order.Application.Features.Orders.Commands;
 using Order.Application.Features.Orders.Dtos;
 using Order.Application.Services.Repositories;
 using Order.Domain.Enums;
+using Microsoft.EntityFrameworkCore; // Bu satır eklendi
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Order.Application.Features.Orders.Rules;
 
@@ -68,6 +71,7 @@ public class OrderBusinessRules
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        // CountAsync kullanabilmek için Microsoft.EntityFrameworkCore gerekli
         var pendingCount = await _orderRepository.Query()
             .CountAsync(o => o.UserId == userId &&
                             o.Status != OrderStatus.Completed &&

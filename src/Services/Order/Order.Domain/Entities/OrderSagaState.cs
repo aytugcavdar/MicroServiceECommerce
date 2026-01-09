@@ -16,6 +16,7 @@ public class OrderSagaState : Entity<Guid>, SagaStateMachineInstance
     public decimal TotalPrice { get; set; }
     public List<OrderItemSnapshot> Items { get; set; } = new();
 
+    public Guid? StockReservationTokenId { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? UpdatedDate { get; set; }
     public DateTime? CompletedDate { get; set; }

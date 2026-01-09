@@ -1,5 +1,7 @@
 ﻿using BuildingBlocks.Core.Paging;
+using BuildingBlocks.Infrastructure.Extensions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Order.Application.Services.Repositories;
 
 namespace Order.Application.Features.Orders.Queries.GetUserOrders;

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Order.Application.Features.Orders.Queries.GetOrderStatistics;
 
-public class GetOrderStatisticsQuery : IRequest<OrderStatisticsResponse>
+public class GetOrderStatisticsQuery : IRequest<GetOrderStatisticsResponse>
 {
     public Guid UserId { get; set; }
 }
