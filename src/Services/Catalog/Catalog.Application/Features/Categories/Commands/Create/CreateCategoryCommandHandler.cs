@@ -2,6 +2,7 @@
 using Catalog.Application.Services;
 using Catalog.Domain.Entities;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,32 +15,35 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
 {
     private readonly ICategoryRepository _categoryRepository;
     private readonly CategoryBusinessRules _categoryBusinessRules;
-    private readonly Serilog.ILogger _logger;
+    private readonly ILogger<CreateCategoryCommandHandler> _logger;
+
+    public CreateCategoryCommandHandler(
+        ICategoryRepository categoryRepository,
+        CategoryBusinessRules categoryBusinessRules,
+        ILogger<CreateCategoryCommandHandler> logger)
+    {
+        _categoryRepository = categoryRepository;
+        _categoryBusinessRules = categoryBusinessRules;
+        _logger = logger;
+    }
 
     public async Task<CreateCategoryCommandResponse> Handle(
         CreateCategoryCommand request,
         CancellationToken cancellationToken)
     {
-        // Loglama mesajını güncelledik
-        _logger.Information("📝 Creating category: {Name} (Parent: {ParentId})", request.Name, request.ParentCategoryId);
+        _logger.LogInformation("📝 Creating category: {Name} (Parent: {ParentId})",
+            request.Name, request.ParentCategoryId);
 
         await _categoryBusinessRules.CategoryNameShouldBeUnique(
             request.Name,
-            cancellationToken: cancellationToken
-        );
+            cancellationToken: cancellationToken);
 
-       
         Category category = new Category(request.Name, request.ParentCategoryId);
-
         await _categoryRepository.AddAsync(category);
-
-        _logger.Information(
-            "✅ Category created successfully: {Id} - {Name}",
-            category.Id,
-            category.Name
-        );
-
         await _categoryRepository.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("✅ Category created successfully: {Id} - {Name}",
+            category.Id, category.Name);
 
         return new CreateCategoryCommandResponse
         {

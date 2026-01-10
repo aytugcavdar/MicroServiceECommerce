@@ -52,6 +52,8 @@ public class CatalogDbContext:DbContext
                 .WithMany(c => c.SubCategories)
                 .HasForeignKey(c => c.ParentCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+            c.Navigation(c => c.ParentCategory).AutoInclude(false);
+            c.Navigation(c => c.SubCategories).AutoInclude(false);
 
             c.HasIndex(c => c.ParentCategoryId);
             c.HasIndex(c => c.IsActive);

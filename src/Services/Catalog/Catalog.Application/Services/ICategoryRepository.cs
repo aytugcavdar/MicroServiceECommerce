@@ -8,4 +8,6 @@ namespace Catalog.Application.Services;
 
 public interface ICategoryRepository: IAsyncRepository<Category,Guid>
 {
+    Task<int> GetProductCountAsync(Guid categoryId, CancellationToken cancellationToken = default);
+    Task<bool> HasProductsAsync(Guid categoryId, CancellationToken cancellationToken = default);
 }

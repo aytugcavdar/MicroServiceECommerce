@@ -39,17 +39,13 @@ public class CategoryBusinessRules
         Guid categoryId,
         CancellationToken cancellationToken = default)
     {
-        var category = await _categoryRepository.GetAsync(
-            c => c.Id == categoryId,
-            include: q => q.Include(c => c.Products),
-            cancellationToken: cancellationToken
-        );
+        var productCount = await _categoryRepository.GetProductCountAsync(
+            categoryId, cancellationToken);
 
-        if (category?.Products?.Any() == true)
+        if (productCount > 0)
             throw new BusinessException(
-                $"Cannot delete category. It has {category.Products.Count} product(s). " +
-                "Please move or delete the products first."
-            );
+                $"Cannot delete category. It has {productCount} product(s). " +
+                "Please move or delete the products first.");
     }
     public async Task<Category> CategoryShouldExist(
        Guid categoryId,

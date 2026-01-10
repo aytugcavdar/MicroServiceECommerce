@@ -42,4 +42,4 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
             category.UpdatedDate ?? DateTime.UtcNow
         );
     }
-}}
+}
