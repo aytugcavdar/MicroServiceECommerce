@@ -11,21 +11,22 @@ using System.Text;
 
 namespace Catalog.Application.Features.Categories.Profiles;
 
-public class CategoryMappingProfile:Profile
+public class CategoryMappingProfile : Profile
 {
     public CategoryMappingProfile()
     {
-        CreateMap<Category, GetListCategoryListItemDto>();
+        CreateMap<Category, GetListCategoryListItemDto>()
+            .ForMember(dest => dest.ParentCategoryId, opt => opt.MapFrom(src => src.ParentCategoryId));
 
         CreateMap<Paginate<Category>, Paginate<GetListCategoryListItemDto>>();
 
-        CreateMap<Category, CreateCategoryCommandResponse>();
+        // Create Komutu İçin Mapping
+        CreateMap<Category, CreateCategoryCommandResponse>()
+            .ForMember(dest => dest.ParentCategoryId, opt => opt.MapFrom(src => src.ParentCategoryId));
 
-
-
-        CreateMap<Category, UpdateCategoryCommandResponse>();
-
-
+        // Update Komutu İçin Mapping
+        CreateMap<Category, UpdateCategoryCommandResponse>()
+             .ForMember(dest => dest.ParentCategoryId, opt => opt.MapFrom(src => src.ParentCategoryId));
 
         CreateMap<Category, DeleteCategoryCommandResponse>();
     }

@@ -1,4 +1,4 @@
-﻿namespace Catalog.Application.Features.Categories.Queries;
+﻿namespace Catalog.Application.Features.Categories.Queries.Tree;
 
 public class CategoryTreeDto
 {

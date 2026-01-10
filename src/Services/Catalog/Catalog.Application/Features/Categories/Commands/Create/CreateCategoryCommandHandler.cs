@@ -16,28 +16,20 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
     private readonly CategoryBusinessRules _categoryBusinessRules;
     private readonly Serilog.ILogger _logger;
 
-    public CreateCategoryCommandHandler(
-        ICategoryRepository categoryRepository,
-        CategoryBusinessRules categoryBusinessRules)
-    {
-        _categoryRepository = categoryRepository;
-        _categoryBusinessRules = categoryBusinessRules;
-        _logger = Log.ForContext<CreateCategoryCommandHandler>();
-    }
-
     public async Task<CreateCategoryCommandResponse> Handle(
         CreateCategoryCommand request,
         CancellationToken cancellationToken)
     {
-        _logger.Information("📝 Creating category: {Name}", request.Name);
+        // Loglama mesajını güncelledik
+        _logger.Information("📝 Creating category: {Name} (Parent: {ParentId})", request.Name, request.ParentCategoryId);
 
         await _categoryBusinessRules.CategoryNameShouldBeUnique(
             request.Name,
             cancellationToken: cancellationToken
         );
 
-
-        Category category = new Category(request.Name);
+       
+        Category category = new Category(request.Name, request.ParentCategoryId);
 
         await _categoryRepository.AddAsync(category);
 
@@ -53,6 +45,7 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
         {
             Id = category.Id,
             Name = category.Name,
+            ParentCategoryId = category.ParentCategoryId,
             CreatedDate = category.CreatedDate
         };
     }

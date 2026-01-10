@@ -3,7 +3,7 @@ using Catalog.Application.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Catalog.Application.Features.Categories.Queries;
+namespace Catalog.Application.Features.Categories.Queries.Tree;
 
 public class GetCategoryTreeQueryHandler : IRequestHandler<GetCategoryTreeQuery, ApiResponse<List<CategoryTreeDto>>>
 {
@@ -18,14 +18,12 @@ public class GetCategoryTreeQueryHandler : IRequestHandler<GetCategoryTreeQuery,
         GetCategoryTreeQuery request,
         CancellationToken cancellationToken)
     {
-        // Tüm kategorileri çek
         var categories = await _categoryRepository.Query()
             .Include(c => c.SubCategories)
             .Include(c => c.Products)
             .Where(c => request.IncludeInactive || c.IsActive)
             .ToListAsync(cancellationToken);
 
-        // Sadece root kategorileri al
         var rootCategories = categories
             .Where(c => c.ParentCategoryId == null)
             .Select(c => MapToDto(c, categories))

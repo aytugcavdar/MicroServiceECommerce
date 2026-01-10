@@ -21,16 +21,25 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
 
     public async Task<UpdateCategoryCommandResponse> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
     {
-        Category? category =await _categoryBusinessRules.CategoryShouldExist(request.Id, cancellationToken);
+        Category? category = await _categoryBusinessRules.CategoryShouldExist(request.Id, cancellationToken);
+
 
         await _categoryBusinessRules.CategoryNameShouldBeUnique(request.Name, excludeCategoryId: request.Id, cancellationToken: cancellationToken);
 
+        // 3. Değerleri güncelle
         category.Name = request.Name;
+        category.ParentCategoryId = request.ParentCategoryId;
 
+        // 4. Veritabanına kaydet
         await _categoryRepository.UpdateAsync(category);
-
         await _categoryRepository.SaveChangesAsync(cancellationToken);
 
-        return new UpdateCategoryCommandResponse(category.Id, category.Name, category.UpdatedDate ?? DateTime.UtcNow);
+        // 5. Cevabı dön
+        return new UpdateCategoryCommandResponse(
+            category.Id,
+            category.Name,
+            category.ParentCategoryId, 
+            category.UpdatedDate ?? DateTime.UtcNow
+        );
     }
-}
+}}
