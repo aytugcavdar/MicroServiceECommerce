@@ -18,8 +18,7 @@ public class User : Entity<Guid>, IAggregateRoot
     public bool IsEmailConfirmed { get; set; }
     public string RegistrationIp { get; set; } = string.Empty;
     public string? EmailConfirmationToken { get; set; }
-
-
+    public DateTime? EmailConfirmationTokenExpiration { get; set; }  // ✅ EKLENDI
 
     // Navigation properties
     public ICollection<RefreshToken> RefreshTokens { get; set; }
@@ -73,28 +72,27 @@ public class User : Entity<Guid>, IAggregateRoot
         string registrationIp,
         bool status = true)
     {
-        var user = new User(firstName, lastName, email, userName, passwordSalt, passwordHash, status,registrationIp);
+        var user = new User(firstName, lastName, email, userName, passwordSalt, passwordHash, status, registrationIp);
 
-        // Email confirmation token oluştur
-        user.EmailConfirmationToken = Guid.NewGuid().ToString();
+        var tokenBytes = new byte[32];
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        rng.GetBytes(tokenBytes);
+        user.EmailConfirmationToken = Convert.ToBase64String(tokenBytes);
+        user.EmailConfirmationTokenExpiration = DateTime.UtcNow.AddHours(24);
         user.IsEmailConfirmed = false;
 
-        // Domain Event fırlat
         user.AddDomainEvent(new UserCreatedDomainEvent(
             userId: user.Id,
             email: user.Email,
             firstName: user.FirstName,
             lastName: user.LastName,
             userName: user.UserName,
-            emailConfirmationToken: user.EmailConfirmationToken
+            emailConfirmationToken: user.EmailConfirmationToken 
         ));
 
         return user;
     }
 
-    /// <summary>
-    /// Email'i doğrula ve domain event fırlat
-    /// </summary>
     public void ConfirmEmail()
     {
         if (IsEmailConfirmed)
@@ -102,9 +100,9 @@ public class User : Entity<Guid>, IAggregateRoot
 
         IsEmailConfirmed = true;
         EmailConfirmationToken = null;
+        EmailConfirmationTokenExpiration = null;  
         UpdatedDate = DateTime.UtcNow;
 
-        // Domain Event fırlat
         AddDomainEvent(new UserEmailConfirmedDomainEvent(
             userId: Id,
             email: Email
