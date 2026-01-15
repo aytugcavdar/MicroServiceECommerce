@@ -6,6 +6,7 @@ using BuildingBlocks.Messaging;
 using BuildingBlocks.Messaging.MassTransit;
 using BuildingBlocks.Security;
 using HealthChecks.NpgSql;
+using Identity.API.BackgroundServices;
 using Identity.Application;
 using Identity.Domain.Events;
 using Identity.Infrastructure;
@@ -31,9 +32,9 @@ builder.Services.AddIdentityInfrastructureServices(builder.Configuration);
 
 
 builder.Services.AddHostedService<OutboxProcessor<IdentityDbContext>>();
-
-
 builder.Services.AddHostedService<OutboxCleanupService<IdentityDbContext>>();
+builder.Services.AddHostedService<ExpiredTokenCleanupService>();
+
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSecurityServices(options =>

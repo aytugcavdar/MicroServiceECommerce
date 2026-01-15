@@ -12,13 +12,13 @@ public class ConfirmEmailCommandHandler
 {
     private readonly IUserRepository _userRepository;
     private readonly ConfirmEmailBusinessRules _confirmEmailBusinessRules;
-    private readonly UserBusinessRules _userBusinessRules; 
+    private readonly UserBusinessRules _userBusinessRules;
     private readonly Serilog.ILogger _logger;
 
     public ConfirmEmailCommandHandler(
         IUserRepository userRepository,
         ConfirmEmailBusinessRules confirmEmailBusinessRules,
-        UserBusinessRules userBusinessRules) 
+        UserBusinessRules userBusinessRules)
     {
         _userRepository = userRepository;
         _confirmEmailBusinessRules = confirmEmailBusinessRules;
@@ -34,35 +34,22 @@ public class ConfirmEmailCommandHandler
             "📧 Email confirmation attempt for: {Email}",
             request.Email);
 
-        // ============================================
-        // 1. BUSINESS RULES VALIDATION & RETRIEVAL
-        // ============================================
-
         var user = await _userBusinessRules.UserShouldExist(request.Email);
 
         _confirmEmailBusinessRules.EmailShouldNotBeAlreadyConfirmed(user);
+        _confirmEmailBusinessRules.EmailConfirmationTokenShouldBeValid(user, request.Token);
+        _confirmEmailBusinessRules.EmailConfirmationTokenShouldNotBeExpired(user); 
 
-        _confirmEmailBusinessRules.EmailConfirmationTokenShouldBeValid(
-            user,
-            request.Token);
-
-        // ============================================
-        // 2. CONFIRM EMAIL (Domain Logic)
-        // ============================================
         user.ConfirmEmail();
 
-        // ============================================
-        // 3. SAVE TO DATABASE
-        // ============================================
         await _userRepository.UpdateAsync(user);
+        await _userRepository.SaveChangesAsync();
 
         _logger.Information(
             "✅ Email confirmed successfully: {Email}",
             user.Email);
 
-        // ============================================
-        // 4. RETURN RESPONSE
-        // ============================================
+        
         return new ConfirmEmailCommandResponse
         {
             Success = true,

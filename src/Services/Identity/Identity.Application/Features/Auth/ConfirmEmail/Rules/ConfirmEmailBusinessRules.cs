@@ -21,4 +21,14 @@ public class ConfirmEmailBusinessRules
         if (user.IsEmailConfirmed)
             throw new BusinessException("Email is already confirmed");
     }
+
+    public void EmailConfirmationTokenShouldNotBeExpired(User user)
+    {
+        if (user.EmailConfirmationTokenExpiration.HasValue &&
+            user.EmailConfirmationTokenExpiration.Value < DateTime.UtcNow)
+        {
+            throw new BusinessException(
+                "Confirmation token has expired. Please request a new confirmation email.");
+        }
+    }
 }
