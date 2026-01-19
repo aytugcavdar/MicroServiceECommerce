@@ -13,7 +13,7 @@ public static class InfrastructureServiceRegistration
     public static IServiceCollection AddInventoryInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<InventoryDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("InventoryConnection")));
+                options.UseNpgsql(configuration.GetConnectionString("InventoryConnectionString")));
 
         return services;
     }

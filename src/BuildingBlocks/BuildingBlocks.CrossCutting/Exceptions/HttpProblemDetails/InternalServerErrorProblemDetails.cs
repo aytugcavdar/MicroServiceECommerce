@@ -12,7 +12,7 @@ public class InternalServerErrorProblemDetails : ProblemDetails
     public InternalServerErrorProblemDetails(string detail)
     {
         Title = "Internal Server Error";
-        Detail = "Internal Server Error";
+        Detail = "An unexpected error occurred. Please contact support.";
         Status = StatusCodes.Status500InternalServerError;
         Type = "https://example.com/probs/internal";
         

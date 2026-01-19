@@ -8,6 +8,7 @@ using Order.Application.Features.Orders.Commands.CreateOrder;
 using Order.Application.Features.Orders.Queries.GetOrderById;
 using Order.Application.Features.Orders.Queries.GetOrderStatistics;
 using Order.Application.Features.Orders.Queries.GetUserOrders;
+using BuildingBlocks.Security.Extensions;
 using Order.Domain.Enums;
 
 namespace Order.API.Controllers;
@@ -57,7 +58,13 @@ public class OrderController : BaseController
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null)
     {
-        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001"); // Test için
+        // ✅ Şimdi çalışacak
+        var userIdString = User.GetUserId();
+
+        if (string.IsNullOrEmpty(userIdString))
+            return Unauthorized(ApiResponse<object>.FailResult("User not authenticated", 401));
+
+        var userId = Guid.Parse(userIdString);
 
         var query = new GetUserOrdersQuery
         {
@@ -69,9 +76,8 @@ public class OrderController : BaseController
         };
 
         var response = await Mediator.Send(query);
-
         return Ok(ApiResponse<Paginate<GetUserOrdersListItemDto>>.SuccessResult(response));
     }
 
-   
+
 }

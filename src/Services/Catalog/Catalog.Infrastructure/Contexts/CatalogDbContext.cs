@@ -71,7 +71,7 @@ public class CatalogDbContext:DbContext
                 Id = electronicsId,
                 Name = "Electronics",
                 IsActive = true,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
@@ -79,7 +79,7 @@ public class CatalogDbContext:DbContext
                 Name = "Mobile Phones",
                 ParentCategoryId = electronicsId,
                 IsActive = true,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Category
             {
@@ -87,7 +87,7 @@ public class CatalogDbContext:DbContext
                 Name = "Laptops",
                 ParentCategoryId = electronicsId,
                 IsActive = true,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         );
 
@@ -108,7 +108,6 @@ public class CatalogDbContext:DbContext
 
         var result = await base.SaveChangesAsync(cancellationToken);
 
-        // Eventleri publish et (MediatR ile)
         foreach (var domainEvent in domainEvents)
         {
             // await _mediator.Publish(domainEvent, cancellationToken);

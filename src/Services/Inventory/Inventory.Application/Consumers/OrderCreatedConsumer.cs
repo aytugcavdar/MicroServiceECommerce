@@ -27,7 +27,8 @@ public class OrderCreatedConsumer : IConsumer<OrderCreatedEvent>
 
     public async Task Consume(ConsumeContext<OrderCreatedEvent> context)
     {
-        _logger.LogInformation($"OrderCreatedEvent yakalandı. Sipariş ID: {context.Message.OrderId}");
+        _logger.LogInformation("OrderCreatedEvent received for OrderId: {OrderId}", context.Message.OrderId);
+
 
         var stockResult = true;
         var failureReason = "";
@@ -59,7 +60,8 @@ public class OrderCreatedConsumer : IConsumer<OrderCreatedEvent>
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation($"Stoklar başarıyla düştü. Sipariş ID: {context.Message.OrderId}");
+            _logger.LogInformation("Stock reserved successfully for OrderId: {OrderId}", context.Message.OrderId);
+
 
             await _publishEndpoint.Publish(new StockReservedEvent(context.Message.OrderId));
         }

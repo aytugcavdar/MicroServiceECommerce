@@ -22,6 +22,8 @@ public class OrderSagaState : Entity<Guid>, SagaStateMachineInstance
     public DateTime? CompletedDate { get; set; }
     public string? FailureReason { get; set; }
     public int RetryCount { get; set; }
+
+
 }
 
 public class OrderItemSnapshot

@@ -31,8 +31,9 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
         CreateCategoryCommand request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("📝 Creating category: {Name} (Parent: {ParentId})",
-            request.Name, request.ParentCategoryId);
+        _logger.LogInformation("Creating category with Name: {CategoryName}, ParentId: {ParentCategoryId}",
+        request.Name,
+        request.ParentCategoryId);
 
         await _categoryBusinessRules.CategoryNameShouldBeUnique(
             request.Name,
@@ -42,8 +43,9 @@ public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComman
         await _categoryRepository.AddAsync(category);
         await _categoryRepository.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("✅ Category created successfully: {Id} - {Name}",
-            category.Id, category.Name);
+        _logger.LogInformation("Category created successfully. Id: {CategoryId}, Name: {CategoryName}",
+            category.Id,
+            category.Name);
 
         return new CreateCategoryCommandResponse
         {

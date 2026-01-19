@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Identity.Infrastructure.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20260114000514_AddEmailTokenExpiration")]
+    [Migration("20260115021157_AddEmailTokenExpiration")]
     partial class AddEmailTokenExpiration
     {
         /// <inheritdoc />

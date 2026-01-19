@@ -1,21 +1,51 @@
 services:
 
-  # --- VERİTABANI (POSTGRESQL - TEK SUNUCU) ---
+  # --- VERİTABANI (POSTGRESQL) ---
   postgres:
     image: postgres:16-alpine
     container_name: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      # Varsayılan bir DB oluşturur, diğerlerini EF Core kod tarafında oluşturacaktır
-      POSTGRES_DB: postgres 
+      POSTGRES_DB: postgres
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    healthcheck: # ✅ SAĞLIK KONTROLÜ EKLENDİ
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - microecommerce-network
     restart: unless-stopped
+
+  # --- ✅ YENİ: OTOMATİK VERİTABANI OLUŞTURUCU (DOSYA YERİNE BU ÇALIŞACAK) ---
+  postgres-init:
+    image: postgres:16-alpine
+    container_name: postgres-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command: >
+      sh -c "
+      echo 'Postgres başlatılıyor, bekleniyor...';
+      export PGPASSWORD='${POSTGRES_PASSWORD}';
+      until pg_isready -h postgres -U ${POSTGRES_USER}; do echo waiting for postgres; sleep 2; done;
+      echo 'Veritabanları oluşturuluyor...';
+      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_IdentityDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_CatalogDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_OrderDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_InventoryDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_NotificationDb\"' || true;
+      echo 'Tüm veritabanları hazır!';
+      "
+    networks:
+      - microecommerce-network
 
   # --- REDIS (SEPET) ---
   basketdb:
@@ -29,7 +59,7 @@ services:
     networks:
       - microecommerce-network
 
-  # --- MESSAGE BROKER (RABBITMQ) ---
+  # --- RABBITMQ ---
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
@@ -39,6 +69,8 @@ services:
     ports:
       - "5672:5672"
       - "${RABBITMQ_UI_PORT}:15672"
+    volumes: # ✅ VOLUME EKLENDİ (VERİ KAYBI OLMASIN DİYE)
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - microecommerce-network
     restart: unless-stopped
@@ -77,9 +109,14 @@ services:
     ports:
       - "${CATALOG_API_PORT}:80"
     depends_on:
-      - postgres
-      - rabbitmq
-      - seq
+      postgres:
+        condition: service_healthy
+      postgres-init: # ✅ VERİTABANLARI OLUŞMADAN BAŞLAMAZ
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - microecommerce-network
 
@@ -97,13 +134,11 @@ services:
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
-      # JWT Ayarları
       - TokenOptions__SecurityKey=${JWT_SECRET}
       - TokenOptions__Issuer=${JWT_ISSUER}
       - TokenOptions__Audience=${JWT_AUDIENCE}
       - TokenOptions__AccessTokenExpiration=${JWT_ACCESS_EXP_MINUTES}
       - TokenOptions__RefreshTokenExpiration=${JWT_REFRESH_EXP_MINUTES}
-      # Email Ayarları
       - EmailOptions__SmtpServer=${SMTP_HOST}
       - EmailOptions__SmtpPort=${SMTP_PORT}
       - EmailOptions__Username=${SMTP_USER}
@@ -112,9 +147,14 @@ services:
     ports:
       - "${IDENTITY_API_PORT}:80"
     depends_on:
-      - postgres
-      - rabbitmq
-      - seq
+      postgres:
+        condition: service_healthy
+      postgres-init: # ✅ VERİTABANLARI OLUŞMADAN BAŞLAMAZ
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - microecommerce-network
 
@@ -135,9 +175,14 @@ services:
     ports:
       - "${INVENTORY_API_PORT}:80"
     depends_on:
-      - postgres
-      - rabbitmq
-      - seq
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - microecommerce-network
 
@@ -163,9 +208,14 @@ services:
     ports:
       - "${NOTIFICATION_API_PORT}:80"
     depends_on:
-      - postgres
-      - rabbitmq
-      - seq
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - microecommerce-network
 
@@ -186,9 +236,14 @@ services:
     ports:
       - "${ORDER_API_PORT}:80"
     depends_on:
-      - postgres
-      - rabbitmq
-      - seq
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - microecommerce-network
 
@@ -209,9 +264,12 @@ services:
     ports:
       - "${BASKET_API_PORT}:80"
     depends_on:
-      - basketdb
-      - rabbitmq
-      - seq
+      basketdb:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - microecommerce-network
 
@@ -228,12 +286,18 @@ services:
     ports:
       - "${API_GATEWAY_PORT}:80"
     depends_on:
-      - catalog-api
-      - identity-api
-      - order-api
-      - basket-api
-      - inventory-api
-      - seq
+      catalog-api:
+        condition: service_started
+      identity-api:
+        condition: service_started
+      order-api:
+        condition: service_started
+      basket-api:
+        condition: service_started
+      inventory-api:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - microecommerce-network
 
@@ -245,3 +309,4 @@ volumes:
   postgres-data:
   seq-data:
   basketdb_data:
+  rabbitmq_data: # ✅ RABBITMQ VERİLERİ ARTIK KAYBOLMAYACAK

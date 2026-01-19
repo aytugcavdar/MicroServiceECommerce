@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Identity.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddEmailTokenExpiration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -63,6 +63,7 @@ namespace Identity.Infrastructure.Migrations
                     IsEmailConfirmed = table.Column<bool>(type: "boolean", nullable: false),
                     RegistrationIp = table.Column<string>(type: "text", nullable: false),
                     EmailConfirmationToken = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    EmailConfirmationTokenExpiration = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
