@@ -12,13 +12,12 @@ public static class ApplicationServiceRegistration
         services.AddMassTransit(x =>
         {
             x.AddConsumer<OrderCreatedConsumer>();
+            x.AddConsumer<ReleaseStockConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
                 var configuration = context.GetRequiredService<IConfiguration>();
 
-                // HATA BURADAYDI: RabbitMqOptions sınıfı yerine doğrudan okuyoruz.
-                // Eğer config gelmezse varsayılan değerleri ("rabbitmq", "guest") kullanır.
                 var host = configuration["RabbitMQ:Host"] ?? "rabbitmq";
                 var userName = configuration["RabbitMQ:UserName"] ?? "guest";
                 var password = configuration["RabbitMQ:Password"] ?? "guest";
@@ -32,6 +31,11 @@ public static class ApplicationServiceRegistration
                 cfg.ReceiveEndpoint("stock-order-created-queue", e =>
                 {
                     e.ConfigureConsumer<OrderCreatedConsumer>(context);
+                });
+
+                cfg.ReceiveEndpoint("stock-release-queue", e =>
+                {
+                    e.ConfigureConsumer<ReleaseStockConsumer>(context);
                 });
             });
         });

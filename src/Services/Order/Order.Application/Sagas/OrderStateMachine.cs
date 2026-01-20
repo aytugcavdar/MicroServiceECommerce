@@ -1,9 +1,6 @@
 ﻿using BuildingBlocks.Messaging.IntegrationEvents;
 using MassTransit;
 using Order.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Order.Application.Sagas;
 
@@ -11,12 +8,10 @@ public class OrderStateMachine : MassTransitStateMachine<OrderSagaState>
 {
     public OrderStateMachine()
     {
-
         InstanceState(x => x.CurrentState);
         Event(() => OrderCreated, x => x.CorrelateById(m => m.Message.OrderId));
         Event(() => StockReserved, x => x.CorrelateById(m => m.Message.OrderId));
         Event(() => StockNotReserved, x => x.CorrelateById(m => m.Message.OrderId));
-
         Event(() => PaymentCompleted, x => x.CorrelateById(m => m.Message.OrderId));
         Event(() => PaymentFailed, x => x.CorrelateById(m => m.Message.OrderId));
 
@@ -35,6 +30,14 @@ public class OrderStateMachine : MassTransitStateMachine<OrderSagaState>
                     context.Saga.TotalPrice = context.Message.TotalPrice;
                     context.Saga.CreatedDate = DateTime.UtcNow;
 
+                    context.Saga.Items = context.Message.OrderItems
+                        .Select(x => new OrderItemSnapshot
+                        {
+                            ProductId = x.ProductId,
+                            Quantity = x.Quantity
+                        })
+                        .ToList();
+
                     Console.WriteLine($"🎯 Saga başlatıldı: OrderId={context.Message.OrderId}");
                 })
                 .Schedule(StockReservationTimeout,
@@ -48,9 +51,9 @@ public class OrderStateMachine : MassTransitStateMachine<OrderSagaState>
                 {
                     Console.WriteLine($"✅ Stok rezerve edildi: {context.Saga.CorrelationId}");
                 })
-                .Unschedule(StockReservationTimeout) 
+                .Unschedule(StockReservationTimeout)
                 .TransitionTo(PaymentPending)
-                .Publish(context => new ProcessPaymentCommand 
+                .Publish(context => new ProcessPaymentCommand
                 {
                     OrderId = context.Saga.CorrelationId,
                     Amount = context.Saga.TotalPrice,
@@ -67,7 +70,6 @@ public class OrderStateMachine : MassTransitStateMachine<OrderSagaState>
                 .TransitionTo(Failed)
                 .Finalize(),
 
-
             When(StockReservationTimeout.Received)
                 .Then(context =>
                 {
@@ -77,7 +79,12 @@ public class OrderStateMachine : MassTransitStateMachine<OrderSagaState>
                 .TransitionTo(Failed)
                 .Publish(context => new ReleaseStockCommand
                 {
-                    OrderId = context.Saga.CorrelationId
+                    OrderId = context.Saga.CorrelationId,
+                    Items = context.Saga.Items.Select(x => new OrderItemMessage
+                    {
+                        ProductId = x.ProductId,
+                        Quantity = x.Quantity
+                    }).ToList()
                 })
                 .Finalize()
         );
@@ -105,11 +112,14 @@ public class OrderStateMachine : MassTransitStateMachine<OrderSagaState>
                     context.Saga.RetryCount++;
                     Console.WriteLine($"💳 Ödeme başarısız: {context.Message.ErrorMessage}");
                 })
-
                 .Publish(context => new ReleaseStockCommand
                 {
                     OrderId = context.Saga.CorrelationId,
-                    Items = context.Message.OrderItems
+                    Items = context.Message.OrderItems.Select(x => new OrderItemMessage
+                    {
+                        ProductId = x.ProductId,
+                        Quantity = x.Quantity
+                    }).ToList()
                 })
                 .TransitionTo(Failed)
                 .Finalize()
@@ -121,18 +131,15 @@ public class OrderStateMachine : MassTransitStateMachine<OrderSagaState>
     public State Failed { get; private set; }
     public State Completed { get; private set; }
 
-    // Events
     public Event<OrderCreatedEvent> OrderCreated { get; private set; }
     public Event<StockReservedEvent> StockReserved { get; private set; }
     public Event<StockNotReservedEvent> StockNotReserved { get; private set; }
     public Event<PaymentCompletedEvent> PaymentCompleted { get; private set; }
     public Event<PaymentFailedEvent> PaymentFailed { get; private set; }
 
-    // ✅ Timeout schedule
     public Schedule<OrderSagaState, StockReservationTimeoutEvent> StockReservationTimeout { get; private set; }
 }
 
-// ✅ Yeni event'ler
 public class StockReservationTimeoutEvent
 {
     public Guid OrderId { get; set; }
@@ -145,16 +152,10 @@ public class ProcessPaymentCommand
     public Guid UserId { get; set; }
 }
 
-public class ReleaseStockCommand
-{
-    public Guid OrderId { get; set; }
-    public List<OrderItemMessage> Items { get; set; }
-}
-
 public class OrderCompletedIntegrationEvent
 {
     public Guid OrderId { get; set; }
     public Guid UserId { get; set; }
     public decimal TotalPrice { get; set; }
-    public DateTime CompletedAt { get; set; }
+    public DateTime CompletedAt { get; set; } = DateTime.UtcNow;
 }

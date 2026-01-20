@@ -2,7 +2,7 @@
 using Catalog.Application;
 using Catalog.Infrastructure;
 using Catalog.Infrastructure.Contexts;
-using HealthChecks.NpgSql;
+using BuildingBlocks.CrossCutting.Middlewares;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -61,6 +61,8 @@ if (app.Environment.IsDevelopment())
    
     app.MapOpenApi();
 }
+
+app.UseCorrelationId();
 
 app.ConfigureCustomExceptionMiddleware();
 app.UseHttpsRedirection();
