@@ -1,4 +1,4 @@
-﻿using BuildingBlocks.Core.Repositories;
+﻿using Microsoft.EntityFrameworkCore.Diagnostics;
 using Catalog.Application.Services;
 using Catalog.Domain.Entities;
 using Catalog.Infrastructure.Contexts;
@@ -17,8 +17,11 @@ public static class InfrastructureServiceRegistration
     public static IServiceCollection AddCatalogInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<CatalogDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("CatalogConnectionString")));
-
+        {
+            options.UseNpgsql(configuration.GetConnectionString("CatalogConnectionString"));
+            options.ConfigureWarnings(warnings =>
+                warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+        });
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         return services;

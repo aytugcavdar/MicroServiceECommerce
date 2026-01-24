@@ -17,6 +17,8 @@ namespace Catalog.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
+                    ParentCategoryId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     DeletedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -61,6 +63,11 @@ namespace Catalog.Infrastructure.Migrations
                 name: "IX_Products_CategoryId",
                 table: "Products",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                 name: "IX_Categories_ParentCategoryId",
+                 table: "Categories",
+                 column: "ParentCategoryId");
         }
 
         /// <inheritdoc />

@@ -1,8 +1,10 @@
 ﻿using BuildingBlocks.Core.Requests;
 using BuildingBlocks.Core.Responses;
+using Catalog.Application.Features.Products.Commands.Create;
 using Catalog.Application.Features.Products.Commands.Delete;
 using Catalog.Application.Features.Products.Commands.Update;
 using Catalog.Application.Features.Products.Queries.GetListProduct;
+using Catalog.Application.Features.Products.Queries.GetByIdProduct;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers;
@@ -13,6 +15,20 @@ namespace Catalog.API.Controllers;
 [Route("api/[controller]")]
 public class ProductController : BaseController
 {
+    [HttpPost]
+    [ProducesResponseType(typeof(ApiResponse<CreateProductCommandResponse>), StatusCodes.Status201Created)]
+    public async Task<IActionResult> Add([FromBody] CreateProductCommand command)
+    {
+        var result = await Mediator.Send(command);
+
+        var response = ApiResponse<CreateProductCommandResponse>.SuccessResult(
+            result,
+            "Product created successfully"
+        );
+
+        return StatusCode(StatusCodes.Status201Created, response);
+    }
+
 
     [HttpGet]
     public async Task<IActionResult> GetList([FromQuery] PageRequest pageRequest)
@@ -51,4 +67,13 @@ public class ProductController : BaseController
         return Ok(response);
     }
 
+
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<GetByIdProductDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetById([FromRoute] Guid id)
+    {
+        var query = new GetByIdProductQuery(id);
+        var result = await Mediator.Send(query);
+        return Ok(result);
+    }
 }

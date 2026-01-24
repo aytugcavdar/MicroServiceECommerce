@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BuildingBlocks.Core.Paging;
 using Identity.Application.Features.Users.Queries.GetListUser;
+using Identity.Application.Features.Users.Queries.GetUserProfile;
 using Identity.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -14,5 +15,10 @@ public class UserMappingProfile : Profile
     {
         CreateMap<User, GetListUserListItemDto>();
         CreateMap<Paginate<User>, Paginate<GetListUserListItemDto>>();
+
+        CreateMap<User, GetUserProfileResponse>()
+            .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id));
     }
+
+
 }

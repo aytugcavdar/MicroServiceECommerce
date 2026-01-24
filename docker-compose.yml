@@ -12,7 +12,7 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    healthcheck: # ✅ SAĞLIK KONTROLÜ EKLENDİ
+    healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d postgres"]
       interval: 10s
       timeout: 5s
@@ -21,7 +21,7 @@ services:
       - microecommerce-network
     restart: unless-stopped
 
-  # --- ✅ YENİ: OTOMATİK VERİTABANI OLUŞTURUCU (DOSYA YERİNE BU ÇALIŞACAK) ---
+  # --- VERİTABANI OLUŞTURUCU ---
   postgres-init:
     image: postgres:16-alpine
     container_name: postgres-init
@@ -35,13 +35,14 @@ services:
       sh -c "
       echo 'Postgres başlatılıyor, bekleniyor...';
       export PGPASSWORD='${POSTGRES_PASSWORD}';
-      until pg_isready -h postgres -U ${POSTGRES_USER}; do echo waiting for postgres; sleep 2; done;
+      until pg_isready -h postgres -U ${POSTGRES_USER} -d postgres; do echo waiting for postgres; sleep 2; done;
       echo 'Veritabanları oluşturuluyor...';
-      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_IdentityDb\"' || true;
-      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_CatalogDb\"' || true;
-      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_OrderDb\"' || true;
-      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_InventoryDb\"' || true;
-      psql -h postgres -U ${POSTGRES_USER} -c 'CREATE DATABASE \"MicroECommerce_NotificationDb\"' || true;
+      # Aşağıdaki her komuta '-d postgres' parametresi eklendi
+      psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_IdentityDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_CatalogDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_OrderDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_InventoryDb\"' || true;
+      psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_NotificationDb\"' || true;
       echo 'Tüm veritabanları hazır!';
       "
     networks:
@@ -69,8 +70,13 @@ services:
     ports:
       - "5672:5672"
       - "${RABBITMQ_UI_PORT}:15672"
-    volumes: # ✅ VOLUME EKLENDİ (VERİ KAYBI OLMASIN DİYE)
+    volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck: 
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - microecommerce-network
     restart: unless-stopped
@@ -98,6 +104,7 @@ services:
     build:
       context: .
       dockerfile: src/Services/Catalog/Catalog.API/Dockerfile
+    restart: on-failure 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
@@ -111,10 +118,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      postgres-init: # ✅ VERİTABANLARI OLUŞMADAN BAŞLAMAZ
+      postgres-init:
         condition: service_completed_successfully
       rabbitmq:
-        condition: service_started
+        condition: service_healthy 
       seq:
         condition: service_started
     networks:
@@ -126,6 +133,7 @@ services:
     build:
       context: .
       dockerfile: src/Services/Identity/Identity.API/Dockerfile
+    restart: on-failure 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
@@ -149,10 +157,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      postgres-init: # ✅ VERİTABANLARI OLUŞMADAN BAŞLAMAZ
+      postgres-init:
         condition: service_completed_successfully
       rabbitmq:
-        condition: service_started
+        condition: service_healthy 
       seq:
         condition: service_started
     networks:
@@ -164,6 +172,7 @@ services:
     build:
       context: .
       dockerfile: src/Services/Inventory/Inventory.API/Dockerfile
+    restart: on-failure 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
@@ -180,7 +189,7 @@ services:
       postgres-init:
         condition: service_completed_successfully
       rabbitmq:
-        condition: service_started
+        condition: service_healthy 
       seq:
         condition: service_started
     networks:
@@ -192,6 +201,7 @@ services:
     build:
       context: .
       dockerfile: src/Services/Notification/Notification.API/Dockerfile
+    restart: on-failure 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
@@ -213,7 +223,7 @@ services:
       postgres-init:
         condition: service_completed_successfully
       rabbitmq:
-        condition: service_started
+        condition: service_healthy 
       seq:
         condition: service_started
     networks:
@@ -225,6 +235,7 @@ services:
     build:
       context: .
       dockerfile: src/Services/Order/Order.API/Dockerfile
+    restart: on-failure 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
@@ -241,7 +252,7 @@ services:
       postgres-init:
         condition: service_completed_successfully
       rabbitmq:
-        condition: service_started
+        condition: service_healthy 
       seq:
         condition: service_started
     networks:
@@ -253,6 +264,7 @@ services:
     build:
       context: .
       dockerfile: src/Services/Basket/Basket.API/Dockerfile
+    restart: on-failure 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
@@ -267,7 +279,7 @@ services:
       basketdb:
         condition: service_started
       rabbitmq:
-        condition: service_started
+        condition: service_healthy 
       seq:
         condition: service_started
     networks:
@@ -279,6 +291,7 @@ services:
     build:
       context: .
       dockerfile: src/ApiGateway/ApiGateway/Dockerfile
+    restart: on-failure 
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
@@ -309,4 +322,4 @@ volumes:
   postgres-data:
   seq-data:
   basketdb_data:
-  rabbitmq_data: # ✅ RABBITMQ VERİLERİ ARTIK KAYBOLMAYACAK
+  rabbitmq_data:

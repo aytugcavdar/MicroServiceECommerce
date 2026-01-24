@@ -5,7 +5,6 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
@@ -61,14 +60,16 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
-
+// ✅ CORS - Frontend için özel yapılandırma
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials()
+              .WithExposedHeaders("X-Correlation-ID", "X-Request-ID");
     });
 
     options.AddPolicy("Production", policy =>
@@ -76,7 +77,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("https://yourdomain.com", "https://www.yourdomain.com")
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials()
+              .WithExposedHeaders("X-Correlation-ID", "X-Request-ID");
     });
 });
 
@@ -84,12 +86,12 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-
 app.UseSerilogRequestLogging();
 
+// ✅ CORS - Environment'a göre
 if (app.Environment.IsDevelopment())
 {
-    app.UseCors("AllowAll");
+    app.UseCors("AllowFrontend");
 }
 else
 {
@@ -103,27 +105,48 @@ app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
 
-
+// ✅ API Info Endpoint
 app.MapGet("/", () => new
 {
-    service = "API Gateway",
+    service = "MicroECommerce API Gateway",
     version = "1.0.0",
     status = "Running",
     timestamp = DateTime.UtcNow,
     endpoints = new
     {
-        catalog = "/api/catalog/*",
-        basket = "/api/basket/*",
-        order = "/api/order/*",
-        inventory = "/api/inventory/*",
-        identity = "/api/identity/*",
-        health = "/health"
+        auth = new
+        {
+            register = "POST /api/identity/auth",
+            login = "POST /api/identity/auth/login",
+            users = "GET /api/identity/users"
+        },
+        catalog = new
+        {
+            products = "GET /api/catalog/product",
+            categories = "GET /api/catalog/category",
+            categoryTree = "GET /api/catalog/category/tree"
+        },
+        basket = new
+        {
+            items = "GET/POST/PUT/DELETE /api/basket/*"
+        },
+        order = new
+        {
+            orders = "GET/POST /api/order/*"
+        },
+        health = new
+        {
+            overall = "GET /health",
+            catalog = "GET /health/catalog",
+            basket = "GET /health/basket",
+            order = "GET /health/order",
+            identity = "GET /health/identity"
+        }
     }
-});
+}).WithTags("Info");
 
-// 7. YARP Reverse Proxy (En sonda olmalı)
 app.MapReverseProxy();
 
-Serilog.Log.Information("🚀 API Gateway (YARP) starting on http://localhost:5000...");
+Serilog.Log.Information("🚀 API Gateway (YARP) starting on port 5000...");
 app.Run();
 Serilog.Log.Information("✅ API Gateway stopped");
