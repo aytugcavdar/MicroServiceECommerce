@@ -22,17 +22,29 @@ public class OrderController : BaseController
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreateOrderCommand command)
     {
+        try
+        {
+            var response = await Mediator.Send(command);
 
-        var response = await Mediator.Send(command);
-
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = response.OrderId },
-            ApiResponse<CreateOrderCommandResponse>.SuccessResult(
-                response,
-                "Order created successfully"
-            )
-        );
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = response.OrderId },
+                ApiResponse<CreateOrderCommandResponse>.SuccessResult(
+                    response,
+                    "Sipariş başarıyla oluşturuldu"
+                )
+            );
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                Message = "Sunucu Hatası (Debug)",
+                Error = ex.Message,
+                Stack = ex.StackTrace,
+                Inner = ex.InnerException?.Message
+            });
+        }
     }
 
     [HttpGet("{id}")]

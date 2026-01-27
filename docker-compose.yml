@@ -269,9 +269,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__Redis=${CONNECTION_STRING_BASKET}
-      - RabbitMQ__Host=${RABBITMQ_HOST}
-      - RabbitMQ__UserName=${RABBITMQ_USER}
-      - RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - RabbitMQSettings__Host=${RABBITMQ_HOST}
+      - RabbitMQSettings__UserName=${RABBITMQ_USER}
+      - RabbitMQSettings__Password=${RABBITMQ_PASSWORD}
+      
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
     ports:
       - "${BASKET_API_PORT}:80"
