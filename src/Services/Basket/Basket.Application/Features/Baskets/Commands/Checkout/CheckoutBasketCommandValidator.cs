@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using Basket.Application.Constants;
+using Basket.Domain.Constants;
 
 namespace Basket.Application.Features.Baskets.Commands.Checkout;
 
@@ -7,32 +9,32 @@ public class CheckoutBasketCommandValidator : AbstractValidator<CheckoutBasketCo
     public CheckoutBasketCommandValidator()
     {
         RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage("UserName is required");
+            .NotEmpty().WithMessage(ValidationMessages.Required);
 
         RuleFor(x => x.FirstName)
-            .NotEmpty().WithMessage("FirstName is required")
-            .MaximumLength(50);
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MaximumLength(50).WithMessage(ValidationMessages.MaxLength); // Should migrate these magic numbers too eventually
 
         RuleFor(x => x.LastName)
-            .NotEmpty().WithMessage("LastName is required")
-            .MaximumLength(50);
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MaximumLength(50).WithMessage(ValidationMessages.MaxLength);
 
         RuleFor(x => x.EmailAddress)
-            .NotEmpty().WithMessage("Email is required")
-            .EmailAddress().WithMessage("Invalid email format");
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .EmailAddress().WithMessage(ValidationMessages.InvalidFormat);
 
         RuleFor(x => x.AddressLine)
-            .NotEmpty().WithMessage("Address is required");
+            .NotEmpty().WithMessage(ValidationMessages.Required);
 
         RuleFor(x => x.Country)
-            .NotEmpty().WithMessage("Country is required");
+            .NotEmpty().WithMessage(ValidationMessages.Required);
 
         RuleFor(x => x.CardNumber)
-            .NotEmpty().WithMessage("Card number is required")
-            .CreditCard().WithMessage("Invalid card number");
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .CreditCard().WithMessage("Invalid card number"); // Could add specific message for CreditCard
 
         RuleFor(x => x.CVV)
-            .NotEmpty().WithMessage("CVV is required")
-            .Matches(@"^\d{3,4}$").WithMessage("CVV must be 3 or 4 digits");
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .Matches(@"^\d{3,4}$").WithMessage("CVV must be 3 or 4 digits"); // Specific regex message
     }
 }

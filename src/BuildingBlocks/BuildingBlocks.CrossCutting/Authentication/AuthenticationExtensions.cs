@@ -26,6 +26,7 @@ public static class AuthenticationExtensions
                 "Please add 'TokenOptions' section with Audience, Issuer, SecurityKey, etc."
             );
         }
+        ValidateSecurityKey(tokenOptions.SecurityKey);
         if (string.IsNullOrEmpty(tokenOptions.SecurityKey) || tokenOptions.SecurityKey.Length < 32)
         {
             throw new InvalidOperationException(
@@ -85,7 +86,6 @@ public static class AuthenticationExtensions
                     return context.Response.WriteAsync(result);
                 },
 
-                // 403 Forbidden response özelleştirmesi
                 OnForbidden = context =>
                 {
                     context.Response.StatusCode = 403;
@@ -109,18 +109,14 @@ public static class AuthenticationExtensions
         });
         services.AddAuthorization(options =>
         {
-            // Default policy: Sadece authenticate olmuş kullanıcılar
-            options.FallbackPolicy = null; // Her endpoint için [Authorize] gerekli değil
+            options.FallbackPolicy = null;
 
-            // Custom policy: Admin rolü gerekli
             options.AddPolicy("AdminOnly", policy =>
                 policy.RequireRole("Admin"));
 
-            // Custom policy: User veya Admin rolü
             options.AddPolicy("UserOrAdmin", policy =>
                 policy.RequireRole("User", "Admin"));
 
-            // Custom policy: Specific claim gerekli
             options.AddPolicy("CanManageProducts", policy =>
                 policy.RequireClaim("permission", "Product.Manage"));
         });
@@ -129,5 +125,22 @@ public static class AuthenticationExtensions
 
         return services;
     }
-   
+
+
+
+
+    private static void ValidateSecurityKey(string securityKey)
+    {
+        if (string.IsNullOrWhiteSpace(securityKey))
+            throw new InvalidOperationException(
+                "JWT SecurityKey cannot be empty! Set it via environment variable.");
+
+        if (securityKey.Contains("REPLACED") || securityKey.Contains("your_"))
+            throw new InvalidOperationException(
+                "JWT SecurityKey contains placeholder text! You must set a real key.");
+
+        if (securityKey.Length < 32)
+            throw new InvalidOperationException(
+                "JWT SecurityKey must be at least 32 characters for security!");
+    }
 }

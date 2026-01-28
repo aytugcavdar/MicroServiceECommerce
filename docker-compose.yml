@@ -37,7 +37,6 @@ services:
       export PGPASSWORD='${POSTGRES_PASSWORD}';
       until pg_isready -h postgres -U ${POSTGRES_USER} -d postgres; do echo waiting for postgres; sleep 2; done;
       echo 'Veritabanları oluşturuluyor...';
-      # Aşağıdaki her komuta '-d postgres' parametresi eklendi
       psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_IdentityDb\"' || true;
       psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_CatalogDb\"' || true;
       psql -h postgres -U ${POSTGRES_USER} -d postgres -c 'CREATE DATABASE \"MicroECommerce_OrderDb\"' || true;
@@ -57,6 +56,11 @@ services:
       - "6379:6379"
     volumes:
       - basketdb_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - microecommerce-network
 
@@ -87,11 +91,25 @@ services:
     container_name: seq
     environment:
       ACCEPT_EULA: Y
-      SEQ_FIRSTRUN_ADMINPASSWORD: ${RABBITMQ_PASSWORD}
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_PASSWORD}
     ports:
       - "${SEQ_PORT}:80"
     volumes:
       - seq-data:/data
+    networks:
+      - microecommerce-network
+    restart: unless-stopped
+
+  # --- DISTRIBUTED TRACING (JAEGER) ---
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC receiver
+      - "4318:4318"    # OTLP HTTP receiver
     networks:
       - microecommerce-network
     restart: unless-stopped
@@ -113,6 +131,7 @@ services:
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     ports:
       - "${CATALOG_API_PORT}:80"
     depends_on:
@@ -123,6 +142,8 @@ services:
       rabbitmq:
         condition: service_healthy 
       seq:
+        condition: service_started
+      jaeger:
         condition: service_started
     networks:
       - microecommerce-network
@@ -152,6 +173,7 @@ services:
       - EmailOptions__Username=${SMTP_USER}
       - EmailOptions__Password=${SMTP_PASS}
       - EmailOptions__SenderEmail=${SENDER_EMAIL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     ports:
       - "${IDENTITY_API_PORT}:80"
     depends_on:
@@ -162,6 +184,8 @@ services:
       rabbitmq:
         condition: service_healthy 
       seq:
+        condition: service_started
+      jaeger:
         condition: service_started
     networks:
       - microecommerce-network
@@ -181,6 +205,7 @@ services:
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     ports:
       - "${INVENTORY_API_PORT}:80"
     depends_on:
@@ -191,6 +216,8 @@ services:
       rabbitmq:
         condition: service_healthy 
       seq:
+        condition: service_started
+      jaeger:
         condition: service_started
     networks:
       - microecommerce-network
@@ -215,6 +242,7 @@ services:
       - EmailOptions__Username=${SMTP_USER}
       - EmailOptions__Password=${SMTP_PASS}
       - EmailOptions__SenderEmail=${SENDER_EMAIL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     ports:
       - "${NOTIFICATION_API_PORT}:80"
     depends_on:
@@ -225,6 +253,8 @@ services:
       rabbitmq:
         condition: service_healthy 
       seq:
+        condition: service_started
+      jaeger:
         condition: service_started
     networks:
       - microecommerce-network
@@ -244,6 +274,7 @@ services:
       - RabbitMQ__UserName=${RABBITMQ_USER}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD}
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     ports:
       - "${ORDER_API_PORT}:80"
     depends_on:
@@ -254,6 +285,8 @@ services:
       rabbitmq:
         condition: service_healthy 
       seq:
+        condition: service_started
+      jaeger:
         condition: service_started
     networks:
       - microecommerce-network
@@ -268,20 +301,22 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
-      - ConnectionStrings__Redis=${CONNECTION_STRING_BASKET}
+      - CacheSettings__ConnectionString=${CONNECTION_STRING_BASKET}
       - RabbitMQSettings__Host=${RABBITMQ_HOST}
       - RabbitMQSettings__UserName=${RABBITMQ_USER}
       - RabbitMQSettings__Password=${RABBITMQ_PASSWORD}
-      
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     ports:
       - "${BASKET_API_PORT}:80"
     depends_on:
       basketdb:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy 
       seq:
+        condition: service_started
+      jaeger:
         condition: service_started
     networks:
       - microecommerce-network
@@ -297,6 +332,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:80
       - Serilog__WriteTo__1__Args__serverUrl=${SEQ_URL}
+      - TokenOptions__SecurityKey=${JWT_SECRET}
+      - TokenOptions__Issuer=${JWT_ISSUER}
+      - TokenOptions__Audience=${JWT_AUDIENCE}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
     ports:
       - "${API_GATEWAY_PORT}:80"
     depends_on:
@@ -311,6 +350,8 @@ services:
       inventory-api:
         condition: service_started
       seq:
+        condition: service_started
+      jaeger:
         condition: service_started
     networks:
       - microecommerce-network

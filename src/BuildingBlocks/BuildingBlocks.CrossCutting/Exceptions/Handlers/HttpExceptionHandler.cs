@@ -25,6 +25,8 @@ public class HttpExceptionHandler
         {
             BusinessException businessException => HandleException(businessException),
             BusinessValidationException validationException => HandleException(validationException),
+            EntityNotFoundException entityNotFoundException => HandleException(entityNotFoundException),
+            NotFoundException notFoundException => HandleException(notFoundException), 
             _ => HandleException(exception)
         };
     }
@@ -49,4 +51,6 @@ public class HttpExceptionHandler
         var details = new InternalServerErrorProblemDetails(exception.Message);
         return Response.WriteAsJsonAsync(details);
     }
+
+
 }

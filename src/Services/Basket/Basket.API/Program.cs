@@ -6,6 +6,8 @@ using BuildingBlocks.CrossCutting.Exceptions.Extensions;
 using BuildingBlocks.Logging.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +43,41 @@ builder.Services.AddMassTransit(config =>
         });
     });
 });
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "Basket.API",
+            serviceVersion: "1.0.0",
+            serviceInstanceId: Environment.MachineName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.EnrichWithHttpRequest = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.request.size", httpRequest.ContentLength);
+            };
+            options.EnrichWithHttpResponse = (activity, httpResponse) =>
+            {
+                activity.SetTag("http.response.size", httpResponse.ContentLength);
+            };
+            options.Filter = (httpContext) =>
+            {
+                return !httpContext.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("MassTransit")
+        .AddConsoleExporter() 
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri("http://localhost:4317");
+        })
+    );
 builder.Services.AddHealthChecks()
     .AddRedis(
         builder.Configuration.GetValue<string>("CacheSettings:ConnectionString")!,

@@ -1,6 +1,8 @@
 ﻿using BuildingBlocks.CrossCutting.Exceptions.types;
 using Catalog.Application.Services;
 using Catalog.Domain.Entities;
+using Catalog.Application.Constants;
+using Catalog.Domain.Constants;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -29,12 +31,9 @@ public class CategoryBusinessRules
          );
 
         if (existingCategory != null)
-            throw new BusinessException($"Category with name '{name}' already exists");
+            throw new BusinessException(ValidationMessages.Category.NameAlreadyExists);
     }
 
-    /// <summary>
-    /// Kategori silinmeden önce altında ürün olmamalı
-    /// </summary>
     public async Task CategoryShouldNotHaveProducts(
         Guid categoryId,
         CancellationToken cancellationToken = default)
@@ -44,8 +43,8 @@ public class CategoryBusinessRules
 
         if (productCount > 0)
             throw new BusinessException(
-                $"Cannot delete category. It has {productCount} product(s). " +
-                "Please move or delete the products first.");
+                ValidationMessages.Category.HasProducts
+                    .Replace("{ProductCount}", productCount.ToString()));
     }
     public async Task<Category> CategoryShouldExist(
        Guid categoryId,

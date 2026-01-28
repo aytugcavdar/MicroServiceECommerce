@@ -2,6 +2,8 @@
 using BuildingBlocks.Messaging;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Notification.Application;
 using Notification.Application.Consumers;
 using Notification.Infrastructure;
@@ -32,6 +34,41 @@ builder.Services.AddEmailServices(
     builder.Configuration,
     typeof(UserCreatedConsumer).Assembly);
     Assembly.GetExecutingAssembly();
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "Notification.API",
+            serviceVersion: "1.0.0",
+            serviceInstanceId: Environment.MachineName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.EnrichWithHttpRequest = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.request.size", httpRequest.ContentLength);
+            };
+            options.EnrichWithHttpResponse = (activity, httpResponse) =>
+            {
+                activity.SetTag("http.response.size", httpResponse.ContentLength);
+            };
+            options.Filter = (httpContext) =>
+            {
+                return !httpContext.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("MassTransit")
+        .AddConsoleExporter() 
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri("http://localhost:4317");
+        })
+    );
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(

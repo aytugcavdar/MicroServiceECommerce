@@ -1,6 +1,8 @@
 ﻿using BuildingBlocks.CrossCutting.Authentication;
 using BuildingBlocks.Logging.Extensions;
 using Microsoft.AspNetCore.RateLimiting;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +18,41 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "ApiGateway",
+            serviceVersion: "1.0.0",
+            serviceInstanceId: Environment.MachineName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.EnrichWithHttpRequest = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.request.size", httpRequest.ContentLength);
+            };
+            options.EnrichWithHttpResponse = (activity, httpResponse) =>
+            {
+                activity.SetTag("http.response.size", httpResponse.ContentLength);
+            };
+            options.Filter = (httpContext) =>
+            {
+                return !httpContext.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("MassTransit")
+        .AddConsoleExporter() 
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri("http://localhost:4317");
+        })
+    );
 
 builder.Services.AddRateLimiter(options =>
 {

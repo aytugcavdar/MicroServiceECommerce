@@ -2,6 +2,8 @@
 using MassTransit;
 using BuildingBlocks.Messaging.IntegrationEvents;
 using Notification.Application.Services;
+using Notification.Application.Constants;
+using Notification.Domain.Constants;
 using Notification.Domain.Entities;
 using Serilog;
 using System;
@@ -38,12 +40,12 @@ public class UserCreatedConsumer : IConsumer<UserCreatedIntegrationEvent>
         var notificationLog = new NotificationLog(
             type: NotificationType.Email,
             recipientEmail: message.Email,
-            subject: "Welcome to MicroECommerce!",
+            subject: NotificationConstants.Templates.Subjects.Welcome,
             content: $"Welcome email for {message.FirstName} {message.LastName}",
             templateName: !string.IsNullOrEmpty(message.EmailConfirmationToken)
-                ? "EmailConfirmation"
-                : "Welcome",
-            eventType: "UserCreated",
+                ? NotificationConstants.Templates.EmailConfirmation
+                : NotificationConstants.Templates.Welcome,
+            eventType: NotificationConstants.Events.UserCreated,
             relatedEntityId: message.UserId
         );
 

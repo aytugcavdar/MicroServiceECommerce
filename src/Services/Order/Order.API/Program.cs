@@ -3,6 +3,8 @@ using BuildingBlocks.Logging.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Order.Application;
 using Order.Application.Sagas;
 using Order.Domain.Entities;
@@ -53,6 +55,41 @@ builder.Services.AddMassTransit(x =>
         cfg.ConfigureEndpoints(context);
     });
 });
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "Order.API",
+            serviceVersion: "1.0.0",
+            serviceInstanceId: Environment.MachineName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.EnrichWithHttpRequest = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.request.size", httpRequest.ContentLength);
+            };
+            options.EnrichWithHttpResponse = (activity, httpResponse) =>
+            {
+                activity.SetTag("http.response.size", httpResponse.ContentLength);
+            };
+            options.Filter = (httpContext) =>
+            {
+                return !httpContext.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("MassTransit")
+        .AddConsoleExporter()
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri("http://localhost:4317");
+        })
+    );
 
 var app = builder.Build();
 

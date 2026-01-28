@@ -1,4 +1,6 @@
-﻿using MediatR;
+﻿using BuildingBlocks.CrossCutting.Exceptions;
+using BuildingBlocks.CrossCutting.Exceptions.types;
+using MediatR;
 using Order.Application.Features.Orders.Dtos;
 using Order.Application.Services.Repositories;
 using System;
@@ -19,9 +21,11 @@ public class DeleteOrderCommandHandler : IRequestHandler<DeleteOrderCommand, Del
     public async Task<DeleteOrderCommandResponse> Handle(DeleteOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await _orderRepository.GetAsync(o => o.Id == request.OrderId);
-        // Business Rule: Check if exist
 
-        await _orderRepository.DeleteAsync(order); // Repository'de soft delete varsa o çalışır
+        if (order == null)
+            throw new EntityNotFoundException("Order", request.OrderId);
+
+        await _orderRepository.DeleteAsync(order); 
         return new DeleteOrderCommandResponse { Id = order.Id };
     }
 }

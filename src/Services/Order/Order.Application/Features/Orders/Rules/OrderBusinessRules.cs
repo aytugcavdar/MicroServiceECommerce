@@ -71,7 +71,6 @@ public class OrderBusinessRules
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        // CountAsync kullanabilmek için Microsoft.EntityFrameworkCore gerekli
         var pendingCount = await _orderRepository.Query()
             .CountAsync(o => o.UserId == userId &&
                             o.Status != OrderStatus.Completed &&
@@ -105,5 +104,27 @@ public class OrderBusinessRules
             throw new BusinessException(
                 $"Duplicate products found: {string.Join(", ", duplicateProducts)}");
         }
+
+        foreach (var item in items)
+        {
+            if (item.Price <= 0)
+                throw new BusinessException(
+                    $"Invalid price for product {item.ProductId}. Price must be positive.");
+
+            if (item.Quantity <= 0)
+                throw new BusinessException(
+                    $"Invalid quantity for product {item.ProductId}. Quantity must be positive.");
+
+            if (item.Quantity > 1000)
+                throw new BusinessException(
+                    $"Quantity too high for product {item.ProductId}. Maximum is 1000.");
+        }
+        var totalPrice = items.Sum(x => x.Price * x.Quantity);
+
+        if (totalPrice <= 0)
+            throw new BusinessException("Order total price must be greater than 0");
+
+        if (totalPrice > 1_000_000)
+            throw new BusinessException("Order total price cannot exceed 1,000,000");
     }
 }

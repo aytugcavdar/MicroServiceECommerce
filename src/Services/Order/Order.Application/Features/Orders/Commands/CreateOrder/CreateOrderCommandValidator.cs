@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Order.Application.Constants;
+using Order.Domain.Constants;
 namespace Order.Application.Features.Orders.Commands.CreateOrder;
 
 public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
@@ -11,16 +13,16 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
     public CreateOrderCommandValidator()
     {
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId is required");
+            .NotEmpty().WithMessage(ValidationMessages.Required);
 
         RuleFor(x => x.Address)
-            .NotNull().WithMessage("Address is required")
+            .NotNull().WithMessage(ValidationMessages.Required)
             .SetValidator(new AddressDtoValidator());
 
         RuleFor(x => x.OrderItems)
-            .NotEmpty().WithMessage("Order must contain at least one item")
+            .NotEmpty().WithMessage(ValidationMessages.Required)
             .Must(items => items != null && items.Count > 0)
-            .WithMessage("Order items cannot be empty");
+            .WithMessage(ValidationMessages.Order.TooManyItems); // Reusing this but maybe needs "AtLeastOne"
 
         RuleForEach(x => x.OrderItems)
             .SetValidator(new CreateOrderItemDtoValidator());

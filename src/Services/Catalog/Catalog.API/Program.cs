@@ -1,11 +1,13 @@
 ﻿using BuildingBlocks.CrossCutting.Exceptions.Extensions;
+using BuildingBlocks.CrossCutting.Middlewares;
 using Catalog.Application;
 using Catalog.Infrastructure;
 using Catalog.Infrastructure.Contexts;
-using BuildingBlocks.CrossCutting.Middlewares;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,42 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddCatalogApplicationServices();
 builder.Services.AddCatalogInfrastructureServices(builder.Configuration);
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "Catalog.API",
+            serviceVersion: "1.0.0",
+            serviceInstanceId: Environment.MachineName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.EnrichWithHttpRequest = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.request.size", httpRequest.ContentLength);
+            };
+            options.EnrichWithHttpResponse = (activity, httpResponse) =>
+            {
+                activity.SetTag("http.response.size", httpResponse.ContentLength);
+            };
+            options.Filter = (httpContext) =>
+            {
+                return !httpContext.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("MassTransit")
+        .AddConsoleExporter() 
+        .AddOtlpExporter(options =>
+        {
+            
+            options.Endpoint = new Uri("http://localhost:4317");
+        })
+    );
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(

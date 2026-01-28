@@ -12,6 +12,8 @@ using Identity.Domain.Events;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Contexts;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text.Json;
@@ -44,6 +46,43 @@ builder.Services.AddSecurityServices(options =>
     options.EnableOtpAuthentication = false; 
     options.EnableTwoFactorAuthentication = false; 
 });
+
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(
+            serviceName: "Identity.API",
+            serviceVersion: "1.0.0",
+            serviceInstanceId: Environment.MachineName))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation(options =>
+        {
+            options.RecordException = true;
+            options.EnrichWithHttpRequest = (activity, httpRequest) =>
+            {
+                activity.SetTag("http.request.size", httpRequest.ContentLength);
+            };
+            options.EnrichWithHttpResponse = (activity, httpResponse) =>
+            {
+                activity.SetTag("http.response.size", httpResponse.ContentLength);
+            };
+            options.Filter = (httpContext) =>
+            {
+                return !httpContext.Request.Path.StartsWithSegments("/health");
+            };
+        })
+        .AddHttpClientInstrumentation(options =>
+        {
+            options.RecordException = true;
+        })
+        .AddSource("MassTransit")
+        .AddConsoleExporter() 
+        .AddOtlpExporter(options =>
+        {
+            options.Endpoint = new Uri("http://localhost:4317");
+        })
+    );
+
 builder.Services.AddMessageBus(builder.Configuration, typeof(Program).Assembly);
 builder.Services.AddHealthChecks()
     .AddNpgSql(

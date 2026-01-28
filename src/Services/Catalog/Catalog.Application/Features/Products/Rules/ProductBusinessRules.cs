@@ -1,6 +1,8 @@
 ﻿using BuildingBlocks.CrossCutting.Exceptions.types;
 using Catalog.Application.Services;
 using Catalog.Domain.Entities;
+using Catalog.Application.Constants;
+using Catalog.Domain.Constants;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -32,12 +34,10 @@ public class ProductBusinessRules
             p.CategoryId == categoryId &&
             (excludeProductId == null || p.Id != excludeProductId),
             cancellationToken: cancellationToken
-            );
+        );
 
         if (existingProduct != null)
-            throw new BusinessException(
-                $"Product with name '{name}' already exists in this category"
-            );
+            throw new BusinessException(ValidationMessages.Product.NameAlreadyExists);
     }
     public async Task CategoryShouldExist(
         Guid categoryId,
@@ -49,7 +49,7 @@ public class ProductBusinessRules
         );
 
         if (category == null)
-            throw new NotFoundException("Category", categoryId);
+            throw new NotFoundException(ValidationMessages.Product.CategoryNotFound); // Or keep "Category" not found if that's generic
     }
 
     /// <summary>
@@ -78,7 +78,9 @@ public class ProductBusinessRules
     {
         if (currentStock < requestedQuantity)
             throw new BusinessException(
-                $"Insufficient stock. Available: {currentStock}, Requested: {requestedQuantity}"
+                ValidationMessages.Product.InsufficientStock
+                    .Replace("{AvailableStock}", currentStock.ToString())
+                    .Replace("{RequestedQuantity}", requestedQuantity.ToString())
             );
     }
 

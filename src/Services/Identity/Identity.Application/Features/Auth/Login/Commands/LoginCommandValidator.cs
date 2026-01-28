@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using Identity.Application.Constants;
+using Identity.Domain.Constants;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,12 +12,12 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
     public LoginCommandValidator()
     {
         RuleFor(x => x.EmailOrUsername)
-            .NotEmpty().WithMessage("Email or username is required")
-            .MinimumLength(3).WithMessage("Email or username must be at least 3 characters")
-            .MaximumLength(100).WithMessage("Email or username cannot exceed 100 characters");
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MinimumLength(3).WithMessage(ValidationMessages.MinLength)
+            .MaximumLength(100).WithMessage(ValidationMessages.MaxLength);
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Password is required")
-            .MinimumLength(6).WithMessage("Password must be at least 6 characters");
+            .NotEmpty().WithMessage(ValidationMessages.Required)
+            .MinimumLength(6).WithMessage(ValidationMessages.MinLength);
     }
 }

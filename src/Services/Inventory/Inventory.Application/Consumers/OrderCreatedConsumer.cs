@@ -1,5 +1,6 @@
 ﻿using BuildingBlocks.Messaging.IntegrationEvents;
 using Inventory.Infrastructure.Contexts;
+using Inventory.Application.Constants;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -42,8 +43,10 @@ public class OrderCreatedConsumer : IConsumer<OrderCreatedEvent>
             {
                 stockResult = false;
                 failureReason = inventoryItem == null
-                    ? $"Ürün bulunamadı (Id: {item.ProductId})"
-                    : $"Stok yetersiz (Ürün Id: {item.ProductId}, Mevcut: {inventoryItem.Stock}, İstenen: {item.Quantity})";
+                    ? ValidationMessages.Product.NotFound
+                    : ValidationMessages.Product.InsufficientStock
+                        .Replace("{AvailableStock}", inventoryItem.Stock.ToString())
+                        .Replace("{RequestedQuantity}", item.Quantity.ToString());
                 break;
             }
         }
