@@ -2,6 +2,7 @@
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Inventory.Application;
 
@@ -9,6 +10,8 @@ public static class ApplicationServiceRegistration
 {
     public static IServiceCollection AddInventoryApplication(this IServiceCollection services)
     {
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+        
         services.AddMassTransit(x =>
         {
             x.AddConsumer<OrderCreatedConsumer>();

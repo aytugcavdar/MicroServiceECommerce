@@ -17,6 +17,22 @@ public class NotificationLogRepository
     {
     }
 
+    public async Task<List<NotificationLog>> GetByEmailAsync(string? email, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.NotificationLogs.AsQueryable();
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            query = query.Where(n => n.RecipientEmail == email);
+        }
+
+        return await query
+            .OrderByDescending(n => n.CreatedDate)
+            .Skip(page * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<NotificationLog>> GetFailedNotificationsAsync(
         CancellationToken cancellationToken = default)
     {

@@ -1,6 +1,7 @@
 ﻿using Basket.API.Entities;
 using Basket.API.Repositories;
 using Basket.Application.Features.Baskets.Commands.Checkout;
+using Basket.Application.Features.Baskets.Commands.DeleteBasket;
 using Basket.Application.Features.Baskets.Commands.UpdateBasket;
 using Basket.Application.Features.Baskets.Queries.GetBasket;
 using BuildingBlocks.Core.Responses;
@@ -15,7 +16,7 @@ using System.Net;
 namespace Basket.API.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/[controller]")]
 public class BasketController : BaseController
 {
     [HttpGet("{userName}")]
@@ -40,16 +41,16 @@ public class BasketController : BaseController
     }
 
     [HttpDelete("{userName}")]
-    [ProducesResponseType(typeof(ApiResponse<bool>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ApiResponse<DeleteBasketCommandResponse>), (int)HttpStatusCode.OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), (int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> DeleteBasket(string userName)
     {
-        var query = new GetBasketQuery { UserName = userName };
-        var basket = await Mediator.Send(query);
+        var command = new DeleteBasketCommand { UserName = userName };
+        var result = await Mediator.Send(command);
 
-        // Burada DeleteBasketCommand oluşturabilirsiniz
-        // Şimdilik basit tutuyoruz
-
-        return Ok(ApiResponse<bool>.SuccessResult(true, "Basket deleted successfully"));
+        return Ok(ApiResponse<DeleteBasketCommandResponse>.SuccessResult(
+            result,
+            "Basket deleted successfully"));
     }
 
     [HttpPost("checkout")]

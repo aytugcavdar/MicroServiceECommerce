@@ -91,6 +91,13 @@ builder.Services.AddOpenTelemetry()
         })
     );
 
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        connectionString: builder.Configuration.GetConnectionString("OrderConnectionString")!,
+        name: "order-db",
+        tags: new[] { "db", "postgresql" })
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: new[] { "api" });
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

@@ -8,6 +8,8 @@ namespace Notification.Application.Services;
 
 public interface INotificationLogRepository : IAsyncRepository<NotificationLog, Guid>
 {
+    Task<List<NotificationLog>> GetByEmailAsync(string? email, int page, int pageSize, CancellationToken cancellationToken = default);
+    
     Task<List<NotificationLog>> GetFailedNotificationsAsync(
         CancellationToken cancellationToken = default);
 
