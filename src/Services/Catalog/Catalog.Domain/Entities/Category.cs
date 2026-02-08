@@ -7,30 +7,50 @@ namespace Catalog.Domain.Entities;
 
 public class Category : Entity<Guid>, IAggregateRoot
 {
-    public string Name { get; set; }
-    public bool IsActive { get; set; }
-    public Guid? ParentCategoryId { get; set; }
-    public Category? ParentCategory { get; set; }
-    public ICollection<Category> SubCategories { get; set; }
-    public ICollection<Product> Products { get; set; }
+    public string Name { get; private set; }
+    public bool IsActive { get; private set; }
+    public Guid? ParentCategoryId { get; private set; }
+    public Category? ParentCategory { get; private set; }
+    
+    private readonly List<Category> _subCategories = new();
+    public IReadOnlyCollection<Category> SubCategories => _subCategories.AsReadOnly();
+    
+    private readonly List<Product> _products = new();
+    public IReadOnlyCollection<Product> Products => _products.AsReadOnly();
 
-
-    public Category()
+    private Category()
     {
         Name = string.Empty;
-        Products = new HashSet<Product>();
-        SubCategories = new HashSet<Category>();
-        IsActive = true;
     }
-    public Category(string name,Guid? parentCategoryId = null)
+
+    public Category(string name, Guid? parentCategoryId = null)
     {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Category name cannot be empty", nameof(name));
+
         Id = Guid.NewGuid();
         Name = name;
         ParentCategoryId = parentCategoryId;
         IsActive = true;
-        Products = new HashSet<Product>();
-        SubCategories = new HashSet<Category>();
         CreatedDate = DateTime.UtcNow;
+    }
+
+    public void UpdateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Category name cannot be empty", nameof(name));
+        
+        Name = name;
+        UpdatedDate = DateTime.UtcNow;
+    }
+
+    public void SetParentCategory(Guid? parentCategoryId)
+    {
+        if (parentCategoryId == Id)
+            throw new InvalidOperationException("Category cannot be its own parent");
+        
+        ParentCategoryId = parentCategoryId;
+        UpdatedDate = DateTime.UtcNow;
     }
 
     public void Activate()
@@ -47,5 +67,5 @@ public class Category : Entity<Guid>, IAggregateRoot
 
     public bool IsRootCategory() => ParentCategoryId == null;
 
-    public bool HasSubCategories() => SubCategories?.Any() == true;
+    public bool HasSubCategories() => _subCategories.Count > 0;
 }

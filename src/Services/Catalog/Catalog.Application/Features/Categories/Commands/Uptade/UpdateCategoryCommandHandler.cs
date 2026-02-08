@@ -26,9 +26,9 @@ public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComman
 
         await _categoryBusinessRules.CategoryNameShouldBeUnique(request.Name, excludeCategoryId: request.Id, cancellationToken: cancellationToken);
 
-        // 3. Değerleri güncelle
-        category.Name = request.Name;
-        category.ParentCategoryId = request.ParentCategoryId;
+        // 3. Değerleri güncelle - using domain methods
+        category.UpdateName(request.Name);
+        category.SetParentCategory(request.ParentCategoryId);
 
         // 4. Veritabanına kaydet
         await _categoryRepository.UpdateAsync(category);

@@ -65,27 +65,28 @@ public class CatalogDbContext:DbContext
         var phonesId = Guid.Parse("a1b2c3d4-e5f6-7890-1234-567890abcdef");
         var laptopsId = Guid.Parse("f1e2d3c4-b5a6-9780-4321-fedcba098765");
 
+        // Seed data using anonymous types (compatible with private setters)
         modelBuilder.Entity<Category>().HasData(
-            new Category
+            new 
             {
                 Id = electronicsId,
                 Name = "Electronics",
                 IsActive = true,
                 CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
-            new Category
+            new 
             {
                 Id = phonesId,
                 Name = "Mobile Phones",
-                ParentCategoryId = electronicsId,
+                ParentCategoryId = (Guid?)electronicsId,
                 IsActive = true,
                 CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
-            new Category
+            new 
             {
                 Id = laptopsId,
                 Name = "Laptops",
-                ParentCategoryId = electronicsId,
+                ParentCategoryId = (Guid?)electronicsId,
                 IsActive = true,
                 CreatedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }

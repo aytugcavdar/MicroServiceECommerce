@@ -1,6 +1,7 @@
 ﻿using BuildingBlocks.Core.Domain;
 using Order.Domain.Enums;
 using Order.Domain.Events;
+using Order.Domain.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -58,7 +59,7 @@ public class Order : Entity<Guid>, IAggregateRoot
         
         if (Status != OrderStatus.Submitted)
         {
-            throw new Exception("Sipariş işleme alındığı için adres güncellenemez.");
+            throw new OrderCannotBeModifiedException(Id, Status, "Address can only be updated for submitted orders");
         }
 
         Address = newAddress;

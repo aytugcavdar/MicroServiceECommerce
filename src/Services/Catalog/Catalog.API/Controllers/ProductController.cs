@@ -6,6 +6,7 @@ using Catalog.Application.Features.Products.Commands.Update;
 using Catalog.Application.Features.Products.Queries.GetListProduct;
 using Catalog.Application.Features.Products.Queries.GetByIdProduct;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Controllers;
 
@@ -16,6 +17,7 @@ namespace Catalog.API.Controllers;
 public class ProductController : BaseController
 {
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<CreateProductCommandResponse>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Add([FromBody] CreateProductCommand command)
     {
@@ -38,6 +40,7 @@ public class ProductController : BaseController
         return Ok(result);
     }
     [HttpPut]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<UpdateProductCommandResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update([FromBody] UpdateProductCommand command)
     {
@@ -53,6 +56,7 @@ public class ProductController : BaseController
 
     
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<DeleteProductCommandResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {

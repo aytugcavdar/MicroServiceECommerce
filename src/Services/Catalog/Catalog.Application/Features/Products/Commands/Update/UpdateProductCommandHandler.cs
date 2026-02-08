@@ -32,17 +32,9 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         );
 
         
-        product.Name = request.Name;
-        product.Description = request.Description;
-        product.Price = request.Price;
-        product.Stock = request.Stock;
-        product.CategoryId = request.CategoryId;
-
         
-        if (!string.IsNullOrEmpty(request.PictureFileName))
-        {
-            product.PictureFileName = request.PictureFileName;
-        }
+        product.Update(request.Name, request.Description, request.Price, request.CategoryId, request.PictureFileName);
+        product.UpdateStock(request.Stock);
 
         
         await _productRepository.UpdateAsync(product);

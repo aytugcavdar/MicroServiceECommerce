@@ -21,6 +21,9 @@ public class OrderDbContext:DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // OrderItemSnapshot is only used as JSON column in OrderSagaState, not as a separate entity
+        modelBuilder.Ignore<OrderItemSnapshot>();
+
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
         base.OnModelCreating(modelBuilder);

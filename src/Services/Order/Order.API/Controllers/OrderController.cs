@@ -3,6 +3,7 @@ using BuildingBlocks.Core.Requests;
 using BuildingBlocks.Core.Responses;
 using Identity.API.Controllers;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Order.Application.Features.Orders.Commands.CreateOrder;
 using Order.Application.Features.Orders.Queries.GetOrderById;
@@ -15,6 +16,7 @@ namespace Order.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class OrderController : BaseController
 {
     [HttpPost]

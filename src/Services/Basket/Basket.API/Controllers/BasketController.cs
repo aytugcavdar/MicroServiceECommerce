@@ -9,6 +9,7 @@ using BuildingBlocks.Messaging.IntegrationEvents;
 using BuildingBlocks.Security.Extensions;
 using Identity.API.Controllers;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -17,6 +18,7 @@ namespace Basket.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class BasketController : BaseController
 {
     [HttpGet("{userName}")]
